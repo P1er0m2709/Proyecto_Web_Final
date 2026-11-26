@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Ordena el Circuito</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .circuit-list {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 22px 0;
+            padding: 22px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .circuit-item {
+            padding: 14px 16px;
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            cursor: grab;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 135px;
+            transition: border-color 0.2s ease, transform 0.15s ease;
+        }
+        .circuit-item.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.2);
+        }
+        .move-controls {
+            display: flex;
+            gap: 6px;
+        }
+        .mini-move {
+            border: 1px solid var(--border);
+            background: var(--surface-alt);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .mini-move:hover {
+            border-color: var(--primary-bright);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>🔢 Ordena el Circuito</h1>
+        <p class="game-subtitle">
+            Arrastra las tarjetas (o usa los botones ◀ ▶) para ordenar el recorrido lógico de la corriente eléctrica.
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Básico (4 Etapas)</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Intermedio (5 Etapas)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Avanzado (6 Etapas)</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Circuito: <strong id="circuitTitle">—</strong></div>
+            <div class="hud-pill">Resueltos: <strong id="solvedCount">0</strong></div>
+            <div class="hud-pill">🏆 Récord: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <div id="circuitList" class="circuit-list" aria-label="Lista de etapas del circuito"></div>
+
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="checkBtn" class="main-button">✅ Comprobar orden</button>
+            <button type="button" id="nextCircuitBtn" class="secondary-button">🎲 Otro circuito aleatorio</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Ordena el Circuito (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Ordena el Circuito: múltiples planos reales por nivel, mezcla aleatoria
+         * garantizada (nunca inicia resuelto), soporte drag-and-drop y botones accesibles.
+         */
+        (() => {
+            const BANCO_CIRCUITOS = {
+                facil: [
+                    {
+                        nombre: "Circuito LED básico",
+                        pasos: ["🔋 Batería 9V (+)", "〰️ Resistencia 330Ω", "💡 Diodo LED", "🔁 Retorno GND (-)"]
+                    },
+                    {
+                        nombre: "Alarma simple con Buzzer",
+                        pasos: ["🔋 Pila 5V (+)", "🔘 Pulsador NA", "♫ Buzzer activo", "🔁 Retorno GND (-)"]
+                    }
+                ],
+                normal: [
+                    {
+                        nombre: "Fuente regulada 5V con LED",
+                        pasos: ["🔋 Batería 9V", "⚡ Regulador 7805", "▥ Capacitor filtro", "〰️ Resistor 220Ω", "💡 LED Indicador"]
+                    },
+                    {
+                        nombre: "Control de luz con Potenciómetro",
+                        pasos: ["🔋 Fuente 9V", "🔘 Interruptor", "◉ Potenciómetro", "〰️ Resistencia fija", "💡 LED brillo variable"]
+                    }
+                ],
+                dificil: [
+                    {
+                        nombre: "Lámpara automática nocturna (LDR)",
+                        pasos: ["🔋 Fuente 9V", "☀ Sensor LDR", "〰️ Divisor 10kΩ", "T Transistor NPN", "↯ Relé 5V", "💡 Carga / Lámpara"]
+                    },
+                    {
+                        nombre: "Sistema inteligente con Arduino",
+                        pasos: ["🔌 Fuente 5V", "◌ Sensor Ultrasónico", "▣ Microcontrolador Arduino", "〰️ Resistencia base", "T Transistor Driver", "⚙️ Motor / Alarma"]
+                    }
+                ]
+            };
+
+            let modoActual = "normal";
+            let circuitoActual = null;
+            let ordenActual = [];
+            let resueltos = 0;
+            let draggedIdx = null;
+
+            const listEl = document.getElementById("circuitList");
+            const titleEl = document.getElementById("circuitTitle");
+            const solvedEl = document.getElementById("solvedCount");
+            const bestRecordEl = document.getElementById("bestRecord");
+            const msgEl = document.getElementById("message");
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("ordenaCircuito");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            /** Mezcla Fisher-Yates asegurando que no quede ya en orden correcto */
+            function mezclarSinResolver(items) {
+                const copia = items.map((texto, idx) => ({ texto, ordenCorrecto: idx }));
+                let intentos = 0;
+                do {
+                    for (let i = copia.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [copia[i], copia[j]] = [copia[j], copia[i]];
+                    }
+                    intentos++;
+                } while (intentos < 15 && copia.every((el, i) => el.ordenCorrecto === i));
+                return copia;
+            }
+
+            function renderizarLista() {
+                listEl.innerHTML = "";
+                ordenActual.forEach((item, idx) => {
+                    const card = document.createElement("div");
+                    card.className = "circuit-item";
+                    card.draggable = true;
+                    card.innerHTML = `
+                        <span style="font-size:11px;color:var(--muted);">Posición ${idx + 1}</span>
+                        <span>${item.texto}</span>
+                        <div class="move-controls">
+                            <button type="button" class="mini-move" data-dir="-1" aria-label="Mover izquierda">◀</button>
+                            <button type="button" class="mini-move" data-dir="1" aria-label="Mover derecha">▶</button>
+                        </div>
+                    `;
+
+                    // Botones accesibles para móvil/teclado
+                    card.querySelectorAll(".mini-move").forEach((btn) => {
+                        btn.addEventListener("click", () => {
+                            const dir = Number(btn.dataset.dir);
+                            const destino = idx + dir;
+                            if (destino < 0 || destino >= ordenActual.length) return;
+                            [ordenActual[idx], ordenActual[destino]] = [ordenActual[destino], ordenActual[idx]];
+                            renderizarLista();
+                        });
+                    });
+
+                    // Arrastrar y soltar
+                    card.addEventListener("dragstart", () => { draggedIdx = idx; });
+                    card.addEventListener("dragover", (e) => e.preventDefault());
+                    card.addEventListener("drop", () => {
+                        if (draggedIdx === null || draggedIdx === idx) return;
+                        const [movido] = ordenActual.splice(draggedIdx, 1);
+                        ordenActual.splice(idx, 0, movido);
+                        draggedIdx = null;
+                        renderizarLista();
+                    });
+
+                    listEl.appendChild(card);
+                });
+            }
+
+            function cargarCircuitoAleatorio(modo = modoActual) {
+                modoActual = modo;
+                const lista = BANCO_CIRCUITOS[modoActual];
+                circuitoActual = lista[Math.floor(Math.random() * lista.length)];
+                ordenActual = mezclarSinResolver(circuitoActual.pasos);
+
+                titleEl.textContent = circuitoActual.nombre;
+                msgEl.textContent = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+
+                actualizarRecord();
+                renderizarLista();
+            }
+
+            function comprobarOrden() {
+                const esCorrecto = ordenActual.every((item, idx) => item.ordenCorrecto === idx);
+                if (esCorrecto) {
+                    resueltos++;
+                    solvedEl.textContent = String(resueltos);
+                    msgEl.textContent = `🎉 ¡Exacto! El circuito "${circuitoActual.nombre}" fluye en el orden correcto.`;
+                    msgEl.style.color = "#16a34a";
+                    window.ElectroBotApp.reproducirTono(780, 0.16);
+                    window.ElectroBotApp.registrarRecordMinijuego("ordenaCircuito", resueltos, `${resueltos} circuitos`, false);
+                    actualizarRecord();
+                } else {
+                    const correctas = ordenActual.filter((item, idx) => item.ordenCorrecto === idx).length;
+                    msgEl.textContent = `❌ Aún no coincide (${correctas}/${ordenActual.length} etapas en su posición). Sigue ajustando.`;
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(200, 0.16, "square");
+                }
+            }
+
+            document.getElementById("checkBtn").addEventListener("click", comprobarOrden);
+            document.getElementById("nextCircuitBtn").addEventListener("click", () => cargarCircuitoAleatorio(modoActual));
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => cargarCircuitoAleatorio(btn.dataset.mode));
+            });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                cargarCircuitoAleatorio(BANCO_CIRCUITOS[pref] ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

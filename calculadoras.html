@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Calculadoras Electrónicas</title>
+    <meta name="description" content="Calculadoras interactivas de Ley de Ohm, resistencia limitadora para LED y código de colores con manejo de excepciones.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .resistor-mini {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 14px 0 18px;
+        }
+        .resistor-mini-wire {
+            width: 36px;
+            height: 6px;
+            background: #64748b;
+        }
+        .resistor-mini-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 190px;
+            height: 60px;
+            background: #d6a96c;
+            border-radius: 30px;
+            overflow: hidden;
+            border: 2px solid #b4854a;
+        }
+        .resistor-mini-band {
+            width: 18px;
+            height: 100%;
+            transition: background 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de navegación unificada -->
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html" class="active">Calculadoras</a>
+            <a href="minijuegos.html">Minijuegos</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <span class="eyebrow">HERRAMIENTAS DE CÁLCULO CON VALIDACIÓN JS</span>
+            <h1>Calculadoras de Taller</h1>
+            <p>
+                Calcula valores eléctricos seguros con validación de entradas y manejo de excepciones
+                (<code>try / catch</code>) para evitar divisiones entre cero o datos inválidos.
+            </p>
+        </section>
+
+        <section class="calc-grid">
+            <!-- Calculadora 1: Ley de Ohm y Potencia -->
+            <article class="calc-card">
+                <h2>⚡ Ley de Ohm y Potencia</h2>
+                <p class="calc-subtitle">Elige la magnitud que deseas hallar e ingresa los dos datos conocidos.</p>
+
+                <div class="form-group">
+                    <label for="ohmTarget">¿Qué deseas calcular?</label>
+                    <select id="ohmTarget">
+                        <option value="V">Voltaje (V = I × R)</option>
+                        <option value="I">Corriente (I = V / R)</option>
+                        <option value="R">Resistencia (R = V / I)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="ohmLabel1" for="ohmInput1">Corriente I (Amperios, ej. 0.02)</label>
+                    <input id="ohmInput1" type="number" step="any" placeholder="Ej. 0.02">
+                </div>
+
+                <div class="form-group">
+                    <label id="ohmLabel2" for="ohmInput2">Resistencia R (Ohmios, ej. 330)</label>
+                    <input id="ohmInput2" type="number" step="any" placeholder="Ej. 330">
+                </div>
+
+                <button id="btnCalcOhm" type="button" class="main-button" style="width:100%;">Calcular Ley de Ohm</button>
+                <div id="ohmOutput" class="calc-output">Ingresa dos valores positivos para ver el resultado y la potencia disipada.</div>
+            </article>
+
+            <!-- Calculadora 2: Resistencia Limitadora para LED -->
+            <article class="calc-card">
+                <h2>💡 Resistencia para LED</h2>
+                <p class="calc-subtitle">Evita quemar tus LEDs calculando la resistencia exacta y el valor comercial E12.</p>
+
+                <div class="form-group">
+                    <label for="ledSourceV">Voltaje de la fuente (V)</label>
+                    <input id="ledSourceV" type="number" step="any" value="9">
+                </div>
+
+                <div class="form-group">
+                    <label for="ledColor">Tipo / Color de LED</label>
+                    <select id="ledColor">
+                        <option value="2.0">Rojo / Amarillo (2.0 V)</option>
+                        <option value="2.2">Verde estándar (2.2 V)</option>
+                        <option value="3.2">Azul / Blanco (3.2 V)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ledCurrentMa">Corriente deseada del LED (mA)</label>
+                    <input id="ledCurrentMa" type="number" step="any" value="20">
+                </div>
+
+                <button id="btnCalcLed" type="button" class="main-button" style="width:100%;">Calcular Resistencia LED</button>
+                <div id="ledOutput" class="calc-output">Presiona calcular para obtener la resistencia recomendada.</div>
+            </article>
+
+            <!-- Calculadora 3: Código de Colores de 4 Bandas -->
+            <article class="calc-card">
+                <h2>🎨 Código de Colores (4 Bandas)</h2>
+                <p class="calc-subtitle">Selecciona cada banda para visualizar la resistencia y su valor en ohmios.</p>
+
+                <div class="resistor-mini" aria-label="Vista previa de resistencia">
+                    <div class="resistor-mini-wire"></div>
+                    <div class="resistor-mini-body">
+                        <div id="previewBand1" class="resistor-mini-band"></div>
+                        <div id="previewBand2" class="resistor-mini-band"></div>
+                        <div id="previewBand3" class="resistor-mini-band"></div>
+                        <div id="previewBand4" class="resistor-mini-band"></div>
+                    </div>
+                    <div class="resistor-mini-wire"></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="band1">1.ª Banda</label>
+                        <select id="band1"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="band2">2.ª Banda</label>
+                        <select id="band2"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="band3">Multiplicador</label>
+                        <select id="band3"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="band4">Tolerancia</label>
+                        <select id="band4">
+                            <option value="±5%" data-color="#d4af37">Dorado (±5%)</option>
+                            <option value="±10%" data-color="#cbd5e1">Plateado (±10%)</option>
+                            <option value="±1%" data-color="#78350f">Marrón (±1%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="colorOutput" class="calc-output success">Valor: <strong>1 kΩ ±5%</strong></div>
+            </article>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Calculadoras Educativas de Electrónica (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Lógica modular de las 3 calculadoras con manejo explícito de excepciones (try/catch).
+         */
+        (() => {
+            const { ElectroBotError, reproducirTono } = window.ElectroBotApp;
+
+            // --- 1. Calculadora de Ley de Ohm y Potencia ---
+            const ohmTarget = document.getElementById("ohmTarget");
+            const ohmLabel1 = document.getElementById("ohmLabel1");
+            const ohmLabel2 = document.getElementById("ohmLabel2");
+            const ohmInput1 = document.getElementById("ohmInput1");
+            const ohmInput2 = document.getElementById("ohmInput2");
+            const ohmOutput = document.getElementById("ohmOutput");
+
+            function actualizarEtiquetasOhm() {
+                const objetivo = ohmTarget.value;
+                if (objetivo === "V") {
+                    ohmLabel1.textContent = "Corriente I (Amperios, ej. 0.02)";
+                    ohmLabel2.textContent = "Resistencia R (Ohmios, ej. 330)";
+                } else if (objetivo === "I") {
+                    ohmLabel1.textContent = "Voltaje V (Voltios, ej. 9)";
+                    ohmLabel2.textContent = "Resistencia R (Ohmios, ej. 330)";
+                } else {
+                    ohmLabel1.textContent = "Voltaje V (Voltios, ej. 9)";
+                    ohmLabel2.textContent = "Corriente I (Amperios, ej. 0.02)";
+                }
+            }
+
+            function calcularLeyDeOhm() {
+                try {
+                    const a = Number(ohmInput1.value);
+                    const b = Number(ohmInput2.value);
+
+                    if (!Number.isFinite(a) || !Number.isFinite(b) || ohmInput1.value.trim() === "" || ohmInput2.value.trim() === "") {
+                        throw new ElectroBotError("Completa ambos campos con números válidos.");
+                    }
+                    if (a < 0 || b < 0) {
+                        throw new ElectroBotError("Los valores eléctricos deben ser mayores que cero.");
+                    }
+
+                    const objetivo = ohmTarget.value;
+                    let V = 0, I = 0, R = 0;
+
+                    if (objetivo === "V") {
+                        I = a; R = b;
+                        V = I * R;
+                    } else if (objetivo === "I") {
+                        if (b === 0) throw new ElectroBotError("Excepción matemática: la resistencia (R) no puede ser 0 Ω (cortocircuito).");
+                        V = a; R = b;
+                        I = V / R;
+                    } else {
+                        if (b === 0) throw new ElectroBotError("Excepción matemática: la corriente (I) no puede ser 0 A.");
+                        V = a; I = b;
+                        R = V / I;
+                    }
+
+                    const P = V * I;
+                    ohmOutput.className = "calc-output success";
+                    ohmOutput.innerHTML = `
+                        <strong>Resultados:</strong><br>
+                        Voltaje (V): <strong>${V.toFixed(3)} V</strong><br>
+                        Corriente (I): <strong>${I.toFixed(4)} A</strong> (${(I * 1000).toFixed(1)} mA)<br>
+                        Resistencia (R): <strong>${R.toFixed(2)} Ω</strong><br>
+                        Potencia (P = V×I): <strong>${P.toFixed(3)} W</strong>
+                    `;
+                    reproducirTono(640, 0.1);
+                } catch (error) {
+                    ohmOutput.className = "calc-output error";
+                    ohmOutput.textContent = `❌ ${error.message}`;
+                    reproducirTono(210, 0.16, "square");
+                }
+            }
+
+            ohmTarget.addEventListener("change", actualizarEtiquetasOhm);
+            document.getElementById("btnCalcOhm").addEventListener("click", calcularLeyDeOhm);
+
+            // --- 2. Calculadora de Resistencia Limitadora para LED ---
+            const VALORES_COMERCIALES_E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82, 100, 120, 150, 180, 220, 270, 330, 390, 470, 560, 680, 820, 1000, 1200, 1500, 2200, 3300, 4700];
+
+            function calcularResistenciaLed() {
+                const ledOutput = document.getElementById("ledOutput");
+                try {
+                    const vFuente = Number(document.getElementById("ledSourceV").value);
+                    const vLed = Number(document.getElementById("ledColor").value);
+                    const iMa = Number(document.getElementById("ledCurrentMa").value);
+
+                    if (!Number.isFinite(vFuente) || !Number.isFinite(iMa)) {
+                        throw new ElectroBotError("Ingresa números válidos en voltaje y corriente.");
+                    }
+                    if (iMa <= 0 || iMa > 100) {
+                        throw new ElectroBotError("La corriente del LED debe estar entre 1 mA y 100 mA (típico: 15-20 mA).");
+                    }
+                    if (vFuente <= vLed) {
+                        throw new ElectroBotError(`El voltaje de la fuente (${vFuente} V) debe ser mayor al voltaje del LED (${vLed} V).`);
+                    }
+
+                    const iAmps = iMa / 1000;
+                    const rExacta = (vFuente - vLed) / iAmps;
+                    const rComercial = VALORES_COMERCIALES_E12.find((v) => v >= rExacta) || Math.ceil(rExacta);
+                    const potencia = (vFuente - vLed) * iAmps;
+
+                    ledOutput.className = "calc-output success";
+                    ledOutput.innerHTML = `
+                        <strong>Cálculo seguro del circuito:</strong><br>
+                        Resistencia exacta: <strong>${rExacta.toFixed(1)} Ω</strong><br>
+                        Valor comercial sugerido: <strong>${rComercial} Ω</strong><br>
+                        Potencia en resistencia: <strong>${potencia.toFixed(3)} W</strong> (usa resistencia de ¼ W o superior)
+                    `;
+                    reproducirTono(700, 0.1);
+                } catch (error) {
+                    ledOutput.className = "calc-output error";
+                    ledOutput.textContent = `❌ ${error.message}`;
+                    reproducirTono(210, 0.16, "square");
+                }
+            }
+
+            document.getElementById("btnCalcLed").addEventListener("click", calcularResistenciaLed);
+
+            // --- 3. Decodificador Visual de Código de Colores (4 Bandas) ---
+            const COLORES_BANDAS = [
+                { nombre: "Negro", valor: 0, mult: 1, hex: "#111827" },
+                { nombre: "Marrón", valor: 1, mult: 10, hex: "#78350f" },
+                { nombre: "Rojo", valor: 2, mult: 100, hex: "#dc2626" },
+                { nombre: "Naranja", valor: 3, mult: 1000, hex: "#f97316" },
+                { nombre: "Amarillo", valor: 4, mult: 10000, hex: "#eab308" },
+                { nombre: "Verde", valor: 5, mult: 100000, hex: "#16a34a" },
+                { nombre: "Azul", valor: 6, mult: 1000000, hex: "#2563eb" },
+                { nombre: "Violeta", valor: 7, mult: 10000000, hex: "#7c3aed" },
+                { nombre: "Gris", valor: 8, mult: 1, hex: "#6b7280" },
+                { nombre: "Blanco", valor: 9, mult: 1, hex: "#f8fafc" }
+            ];
+
+            const band1 = document.getElementById("band1");
+            const band2 = document.getElementById("band2");
+            const band3 = document.getElementById("band3");
+            const band4 = document.getElementById("band4");
+
+            COLORES_BANDAS.forEach((c, idx) => {
+                if (idx > 0) {
+                    band1.innerHTML += `<option value="${c.valor}">${c.nombre} (${c.valor})</option>`;
+                }
+                band2.innerHTML += `<option value="${c.valor}">${c.nombre} (${c.valor})</option>`;
+                if (idx <= 6) {
+                    band3.innerHTML += `<option value="${idx}">${c.nombre} (×${c.mult.toLocaleString("es-PE")})</option>`;
+                }
+            });
+
+            // Valor inicial clásico: 1 kΩ (Marrón - Negro - Rojo - Dorado)
+            band1.value = "1";
+            band2.value = "0";
+            band3.value = "2";
+
+            function formatearOhmios(ohmios) {
+                if (ohmios >= 1000000) return `${(ohmios / 1000000).toFixed(ohmios % 1000000 === 0 ? 0 : 2)} MΩ`;
+                if (ohmios >= 1000) return `${(ohmios / 1000).toFixed(ohmios % 1000 === 0 ? 0 : 2)} kΩ`;
+                return `${ohmios} Ω`;
+            }
+
+            function actualizarCodigoColores() {
+                try {
+                    const c1 = COLORES_BANDAS[Number(band1.value)];
+                    const c2 = COLORES_BANDAS[Number(band2.value)];
+                    const c3 = COLORES_BANDAS[Number(band3.value)];
+                    const tolOption = band4.options[band4.selectedIndex];
+
+                    document.getElementById("previewBand1").style.background = c1.hex;
+                    document.getElementById("previewBand2").style.background = c2.hex;
+                    document.getElementById("previewBand3").style.background = c3.hex;
+                    document.getElementById("previewBand4").style.background = tolOption.dataset.color;
+
+                    const valorOhmios = (c1.valor * 10 + c2.valor) * c3.mult;
+                    document.getElementById("colorOutput").innerHTML = `
+                        Valor decodificado: <strong>${formatearOhmios(valorOhmios)} ${band4.value}</strong><br>
+                        <span style="font-size:12px;color:var(--muted);">(${c1.nombre} ${c1.valor}, ${c2.nombre} ${c2.valor}, ${c3.nombre} ×${c3.mult.toLocaleString("es-PE")})</span>
+                    `;
+                } catch (error) {
+                    console.error("[ElectroBot] Error en decodificador de colores:", error);
+                }
+            }
+
+            [band1, band2, band3, band4].forEach((sel) => sel.addEventListener("change", actualizarCodigoColores));
+            actualizarCodigoColores();
+            actualizarEtiquetasOhm();
+        })();
+    </script>
+</body>
+</html>

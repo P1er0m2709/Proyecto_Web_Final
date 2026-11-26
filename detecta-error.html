@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Detecta el Error</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .symptom-box {
+            padding: 16px 20px;
+            border-radius: 14px;
+            background: var(--accent-soft);
+            border: 1px solid var(--border);
+            margin: 14px auto;
+            max-width: 680px;
+            text-align: left;
+            font-size: 15px;
+        }
+        .circuit-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 24px 16px;
+            margin: 22px 0;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .part-btn {
+            padding: 16px 18px;
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 145px;
+            transition: transform 0.15s ease, border-color 0.2s ease;
+        }
+        .part-btn:hover:not(:disabled) {
+            border-color: var(--primary-bright);
+            transform: translateY(-2px);
+        }
+        .part-btn small {
+            display: block;
+            margin-top: 4px;
+            font-weight: 400;
+            color: var(--muted);
+        }
+        .part-btn.correct { border-color: #16a34a; background: rgba(22, 163, 74, 0.14); }
+        .part-btn.wrong { border-color: #dc2626; background: rgba(220, 38, 38, 0.14); }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>⚠️ Detecta el Error</h1>
+        <p class="game-subtitle">
+            Analiza el síntoma del circuito en el taller y haz clic sobre el componente que provoca la falla.
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Básico (5 Casos)</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Técnico (8 Casos)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Contrarreloj (60 s)</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Aciertos: <strong id="hits">0</strong></div>
+            <div class="hud-pill"><span id="progressLabel">Caso</span>: <strong id="progressVal">1/8</strong></div>
+            <div class="hud-pill">🏆 Récord: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <div id="symptomBox" class="symptom-box"></div>
+        <div id="circuitRow" class="circuit-row"></div>
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="restartBtn" class="main-button">🎲 Nueva sesión aleatoria</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Detecta el Error (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Detecta el Error: banco aleatorio de 12 fallas técnicas reales de taller,
+         * 3 modos de juego y actualización automática de récords del perfil.
+         */
+        (() => {
+            const CASOS_FALLAS = [
+                {
+                    titulo: "LED apagado en circuito de 9V",
+                    sintoma: "La batería está cargada y el interruptor cerrado, pero el LED no enciende.",
+                    partes: [
+                        { id: "bat", label: "🔋 Batería 9V", detalle: "9.1 V medidos" },
+                        { id: "sw", label: "🔘 Interruptor", detalle: "Cerrado (ON)" },
+                        { id: "res", label: "〰️ Resistencia", detalle: "330 Ω correcta" },
+                        { id: "led", label: "💡 LED Rojo", detalle: "Cátodo hacia (+)" }
+                    ],
+                    culpable: "led",
+                    explicacion: "El LED está en polaridad inversa: su cátodo (-) fue conectado hacia el polo positivo."
+                },
+                {
+                    titulo: "LED quemado al instante",
+                    sintoma: "Al conectar la pila de 9V, el LED brilló un segundo y dejó de funcionar.",
+                    partes: [
+                        { id: "bat", label: "🔋 Batería 9V", detalle: "Voltaje nominal 9V" },
+                        { id: "res", label: "〰️ Cable puente", detalle: "0 Ω en lugar de 330 Ω" },
+                        { id: "led", label: "💡 LED Verde", detalle: "Polaridad correcta" },
+                        { id: "gnd", label: "🔁 Retorno GND", detalle: "Conectado a (-)" }
+                    ],
+                    culpable: "res",
+                    explicacion: "Faltó una resistencia limitadora; el exceso de corriente destruyó el diodo LED."
+                },
+                {
+                    titulo: "Capacitor electrolítico se calienta",
+                    sintoma: "La fuente de 12V funciona, pero el capacitor comienza a hincharse.",
+                    partes: [
+                        { id: "psu", label: "🔌 Fuente 12V", detalle: "Salida estable CC" },
+                        { id: "cap", label: "▥ Capacitor 100µF", detalle: "Franja (-) en riel (+)" },
+                        { id: "reg", label: "⚡ Regulador 7805", detalle: "Entrada pin 1" },
+                        { id: "led", label: "💡 LED indicador", detalle: "Con 220 Ω" }
+                    ],
+                    culpable: "cap",
+                    explicacion: "Los capacitores electrolíticos tienen polaridad; invertirlos produce sobrecalentamiento."
+                },
+                {
+                    titulo: "Arduino no responde con sensor ultrasónico",
+                    sintoma: "El código está bien, pero las lecturas de distancia siempre marcan 0 cm.",
+                    partes: [
+                        { id: "ard", label: "▣ Arduino UNO", detalle: "5V activos" },
+                        { id: "ult", label: "◌ Sensor HC-SR04", detalle: "VCC en pin GND" },
+                        { id: "usb", label: "🔌 Cable USB", detalle: "Comunicación OK" },
+                        { id: "led", label: "💡 LED pin 13", detalle: "Parpadea normal" }
+                    ],
+                    culpable: "ult",
+                    explicacion: "La alimentación VCC del sensor ultrasónico se conectó a GND en lugar de 5V."
+                },
+                {
+                    titulo: "Motor DC no gira con señal de Arduino",
+                    sintoma: "El pin digital envía 5V, pero el motor de 12V ni se mueve y el Arduino se reinicia.",
+                    partes: [
+                        { id: "ard", label: "▣ Pin Digital 9", detalle: "Máx. 40 mA" },
+                        { id: "mot", label: "⚙️ Motor DC 12V", detalle: "Conectado directo al pin" },
+                        { id: "code", label: "💻 Código PWM", detalle: "analogWrite(9, 200)" },
+                        { id: "gnd", label: "🔁 Tierra común", detalle: "GND unido" }
+                    ],
+                    culpable: "mot",
+                    explicacion: "Un motor DC exige demasiada corriente; debe aislarse usando un transistor/MOSFET o relé."
+                },
+                {
+                    titulo: "Buzzer activo no emite sonido",
+                    sintoma: "Al activar la alarma, el LED de alerta se enciende pero el buzzer queda en silencio.",
+                    partes: [
+                        { id: "bat", label: "🔋 Pila 5V", detalle: "Voltaje OK" },
+                        { id: "led", label: "💡 LED Alerta", detalle: "Encendido" },
+                        { id: "buz", label: "♫ Buzzer Activo", detalle: "Pin (+) en tierra" },
+                        { id: "sw", label: "🔘 Pulsador", detalle: "Presionado" }
+                    ],
+                    culpable: "buz",
+                    explicacion: "El buzzer activo tiene polaridad y su terminal positivo (+) se conectó a negativo."
+                },
+                {
+                    titulo: "Circuito en protoboard sin energía",
+                    sintoma: "Todos los componentes están bien orientados, pero el multímetro marca 0 V en la carga.",
+                    partes: [
+                        { id: "bat", label: "🔋 Batería 9V", detalle: "9.0 V OK" },
+                        { id: "pro", label: "▦ Protoboard", detalle: "Cable en fila sin puente" },
+                        { id: "res", label: "〰️ Resistencia 470Ω", detalle: "Continuidad OK" },
+                        { id: "led", label: "💡 LED Azul", detalle: "Polaridad correcta" }
+                    ],
+                    culpable: "pro",
+                    explicacion: "El cable quedó en una fila distinta al componente, dejando el circuito abierto."
+                },
+                {
+                    titulo: "Servomotor vibra sin control",
+                    sintoma: "El servo recibe señal PWM del pin 6 pero gira erráticamente.",
+                    partes: [
+                        { id: "ard", label: "▣ Arduino UNO", detalle: "Señal PWM OK" },
+                        { id: "srv", label: "↻ Servomotor SG90", detalle: "Cable GND desconectado" },
+                        { id: "bat", label: "🔋 Fuente 5V", detalle: "2 A disponibles" },
+                        { id: "pot", label: "◉ Potenciómetro", detalle: "Lectura A0 estable" }
+                    ],
+                    culpable: "srv",
+                    explicacion: "Sin tierra común (GND) entre el servomotor y el controlador, la señal PWM no tiene referencia."
+                },
+                {
+                    titulo: "Luz automática LDR siempre encendida",
+                    sintoma: "Aunque hay mucha luz solar, el sistema nocturno mantiene la lámpara prendida.",
+                    partes: [
+                        { id: "ldr", label: "☀ Sensor LDR", detalle: "Tapado con cinta negra" },
+                        { id: "tr", label: "T Transistor NPN", detalle: "Base polarizada" },
+                        { id: "res", label: "〰️ Resistor 10kΩ", detalle: "Divisor correcto" },
+                        { id: "led", label: "💡 LED Blanco", detalle: "Funciona normal" }
+                    ],
+                    culpable: "ldr",
+                    explicacion: "La fotoresistencia LDR está obstruida, por lo que siempre detecta oscuridad."
+                },
+                {
+                    titulo: "Pantalla LCD 16x2 sin texto visible",
+                    sintoma: "La luz de fondo enciende, pero no se distinguen las letras en pantalla.",
+                    partes: [
+                        { id: "ard", label: "▣ Arduino", detalle: "lcd.print() activo" },
+                        { id: "pot", label: "◉ Potenciómetro V0", detalle: "Contraste al mínimo (0%)" },
+                        { id: "psu", label: "🔌 5V regulados", detalle: "Estable" },
+                        { id: "lcd", label: "📟 LCD 16x2", detalle: "Backlight encendido" }
+                    ],
+                    culpable: "pot",
+                    explicacion: "El potenciómetro conectado al pin V0 controla el contraste; al mínimo oculta los caracteres."
+                },
+                {
+                    titulo: "Cortocircuito en fuente de laboratorio",
+                    sintoma: "La fuente entra en protección inmediata al encender el interruptor.",
+                    partes: [
+                        { id: "psu", label: "🔌 Fuente 5V", detalle: "Protección activa" },
+                        { id: "dio", label: "▶ Diodo 1N4007", detalle: "Directo entre +5V y GND" },
+                        { id: "res", label: "〰️ Resistencia 1kΩ", detalle: "En rama LED" },
+                        { id: "led", label: "💡 LED Rojo", detalle: "En serie con 1kΩ" }
+                    ],
+                    culpable: "dio",
+                    explicacion: "El diodo de protección quedó en polarización directa entre +5V y GND creando un cortocircuito."
+                },
+                {
+                    titulo: "Multímetro marca 0 V al medir resistencia",
+                    sintoma: "Intentas medir el valor de una resistencia suelta pero la pantalla marca 0.00.",
+                    partes: [
+                        { id: "res", label: "〰️ Resistencia 2.2kΩ", detalle: "En buen estado" },
+                        { id: "mul", label: "⌁ Multímetro", detalle: "Perilla en Voltaje (V)" },
+                        { id: "p1", label: "🔴 Punta roja", detalle: "En terminal VΩmA" },
+                        { id: "p2", label: "⚫ Punta negra", detalle: "En terminal COM" }
+                    ],
+                    culpable: "mul",
+                    explicacion: "Para medir ohmios la perilla del multímetro debe colocarse en el símbolo Ω, no en Voltaje."
+                }
+            ];
+
+            let modoActual = "normal";
+            let colaCasos = [];
+            let indice = 0;
+            let aciertos = 0;
+            let tiempo = 60;
+            let timer = null;
+            let bloqueado = false;
+
+            const hitsEl = document.getElementById("hits");
+            const progressLabelEl = document.getElementById("progressLabel");
+            const progressValEl = document.getElementById("progressVal");
+            const bestRecordEl = document.getElementById("bestRecord");
+            const symptomEl = document.getElementById("symptomBox");
+            const circuitRowEl = document.getElementById("circuitRow");
+            const msgEl = document.getElementById("message");
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("detectaError");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            function mostrarCaso() {
+                if (indice >= colaCasos.length) {
+                    if (modoActual === "dificil") {
+                        colaCasos = [...CASOS_FALLAS].sort(() => Math.random() - 0.5);
+                        indice = 0;
+                    } else {
+                        finalizarSesion();
+                        return;
+                    }
+                }
+
+                bloqueado = false;
+                const caso = colaCasos[indice];
+                if (modoActual !== "dificil") {
+                    progressValEl.textContent = `${indice + 1}/${colaCasos.length}`;
+                }
+
+                symptomEl.innerHTML = `
+                    <strong>📋 Caso: ${caso.titulo}</strong><br>
+                    <span style="color:var(--muted);">Síntoma observado: ${caso.sintoma}</span>
+                `;
+
+                circuitRowEl.innerHTML = "";
+                // Mezclar orden de botones en cada ronda para mayor aleatoriedad
+                const partesMezcladas = [...caso.partes].sort(() => Math.random() - 0.5);
+                partesMezcladas.forEach((p, idx) => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "part-btn";
+                    btn.dataset.id = p.id;
+                    btn.innerHTML = `${p.label}<small>${p.detalle}</small>`;
+                    btn.addEventListener("click", () => evaluarParte(p.id, btn, caso));
+                    circuitRowEl.appendChild(btn);
+
+                    if (idx < partesMezcladas.length - 1) {
+                        const arrow = document.createElement("span");
+                        arrow.textContent = "→";
+                        arrow.style.fontWeight = "800";
+                        arrow.style.color = "var(--primary-bright)";
+                        circuitRowEl.appendChild(arrow);
+                    }
+                });
+            }
+
+            function evaluarParte(idElegido, btnElegido, caso) {
+                if (bloqueado) return;
+                bloqueado = true;
+
+                circuitRowEl.querySelectorAll(".part-btn").forEach((b) => {
+                    b.disabled = true;
+                    if (b.dataset.id === caso.culpable) b.classList.add("correct");
+                });
+
+                if (idElegido === caso.culpable) {
+                    aciertos++;
+                    hitsEl.textContent = String(aciertos);
+                    msgEl.textContent = `✅ ¡Diagnóstico correcto! ${caso.explicacion}`;
+                    msgEl.style.color = "#16a34a";
+                    window.ElectroBotApp.reproducirTono(740, 0.14);
+                } else {
+                    btnElegido.classList.add("wrong");
+                    msgEl.textContent = `❌ Falla distinta. ${caso.explicacion}`;
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(200, 0.18, "square");
+                }
+
+                window.ElectroBotApp.registrarRecordMinijuego("detectaError", aciertos, `${aciertos} aciertos`, false);
+                actualizarRecord();
+
+                setTimeout(() => {
+                    indice++;
+                    if (modoActual !== "dificil" || tiempo > 0) {
+                        mostrarCaso();
+                    }
+                }, 1500);
+            }
+
+            function finalizarSesion() {
+                clearInterval(timer);
+                bloqueado = true;
+                circuitRowEl.querySelectorAll(".part-btn").forEach((b) => (b.disabled = true));
+                msgEl.textContent = `🏁 Diagnóstico completado: ${aciertos} aciertos. ¡Excelente trabajo en el taller!`;
+                msgEl.style.color = "#0f766e";
+                window.ElectroBotApp.registrarRecordMinijuego("detectaError", aciertos, `${aciertos} aciertos`, false);
+                actualizarRecord();
+            }
+
+            function iniciarSesion(modo = modoActual) {
+                modoActual = modo;
+                aciertos = 0;
+                indice = 0;
+                tiempo = 60;
+                clearInterval(timer);
+
+                const barajados = [...CASOS_FALLAS].sort(() => Math.random() - 0.5);
+                colaCasos = modoActual === "facil"
+                    ? barajados.slice(0, 5)
+                    : modoActual === "normal"
+                        ? barajados.slice(0, 8)
+                        : barajados;
+
+                hitsEl.textContent = "0";
+                msgEl.textContent = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+
+                if (modoActual === "dificil") {
+                    progressLabelEl.textContent = "Tiempo";
+                    progressValEl.textContent = "60 s";
+                    timer = setInterval(() => {
+                        tiempo--;
+                        progressValEl.textContent = `${tiempo} s`;
+                        if (tiempo <= 0) finalizarSesion();
+                    }, 1000);
+                } else {
+                    progressLabelEl.textContent = "Caso";
+                }
+
+                actualizarRecord();
+                mostrarCaso();
+            }
+
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => iniciarSesion(btn.dataset.mode));
+            });
+            document.getElementById("restartBtn").addEventListener("click", () => iniciarSesion(modoActual));
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                iniciarSesion(["facil", "normal", "dificil"].includes(pref) ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Reacción del LED</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .led-lamp {
+            width: 165px;
+            height: 165px;
+            margin: 26px auto;
+            border-radius: 50%;
+            background: #334155;
+            border: 8px solid #64748b;
+            box-shadow: inset 0 0 28px #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 46px;
+            transition: background 0.1s ease, box-shadow 0.1s ease;
+        }
+        .led-lamp.green-on {
+            background: #22c55e;
+            border-color: #86efac;
+            box-shadow: 0 0 50px #22c55e;
+        }
+        .led-lamp.red-trap {
+            background: #ef4444;
+            border-color: #fca5a5;
+            box-shadow: 0 0 50px #ef4444;
+        }
+        .reaction-btn {
+            min-width: 240px;
+            height: 68px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #00b894, #0984e3);
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.12s ease;
+        }
+        .reaction-btn:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>⏱️ Reacción del LED</h1>
+        <p class="game-subtitle">
+            Espera el encendido aleatorio del <strong>LED Verde</strong> y presiona de inmediato. ¡Cuidado con los falsos arranques y el LED Rojo trampa!
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Prueba Rápida (1 Intento)</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Serie de 5 Rondas (Promedio)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Modo Trampa (LED Rojo)</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Intento: <strong id="attempt">0</strong></div>
+            <div class="hud-pill">Último: <strong id="lastMs">—</strong></div>
+            <div class="hud-pill">🏆 Mejor marca: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <div id="led" class="led-lamp" aria-live="polite">💡</div>
+
+        <button id="reactionButton" class="reaction-btn" type="button">Iniciar prueba</button>
+
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="resetBtn" class="secondary-button">Reiniciar serie</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Reacción del LED (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Reacción del LED: corrige el bug original de espacios en textContent mediante
+         * una máquina de estados explícita (idle, waiting, green, trap) + 3 modalidades.
+         */
+        (() => {
+            const ledEl = document.getElementById("led");
+            const actionBtn = document.getElementById("reactionButton");
+            const attemptEl = document.getElementById("attempt");
+            const lastMsEl = document.getElementById("lastMs");
+            const msgEl = document.getElementById("message");
+            const bestRecordEl = document.getElementById("bestRecord");
+
+            let modoActual = "normal";
+            let estado = "idle"; // "idle" | "waiting" | "green" | "trap"
+            let tiempoInicio = 0;
+            let timeoutId = null;
+            let resultados = [];
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("reaccionLed");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            function programarSiguientePulso() {
+                clearTimeout(timeoutId);
+                estado = "waiting";
+                ledEl.className = "led-lamp";
+                ledEl.textContent = "⏳";
+                actionBtn.textContent = "Espera el LED verde...";
+                msgEl.textContent = "No presiones todavía...";
+                msgEl.style.color = "";
+
+                const esperaAleatoria = 1300 + Math.floor(Math.random() * 2800);
+
+                timeoutId = setTimeout(() => {
+                    // En modo difícil existe 40 % de probabilidad de LED rojo señuelo
+                    const lanzarTrampa = modoActual === "dificil" && Math.random() < 0.4;
+
+                    if (lanzarTrampa) {
+                        estado = "trap";
+                        ledEl.className = "led-lamp red-trap";
+                        ledEl.textContent = "🚫";
+                        actionBtn.textContent = "¡NO PRESIONES!";
+                        msgEl.textContent = "🔴 ¡LED Rojo señuelo! Espera sin tocar...";
+                        msgEl.style.color = "#dc2626";
+                        window.ElectroBotApp.reproducirTono(240, 0.15, "square");
+
+                        // Si el jugador resiste la trampa 1.4 s, lanza el verde real
+                        timeoutId = setTimeout(() => {
+                            if (estado === "trap") programarSiguientePulso();
+                        }, 1400);
+                    } else {
+                        estado = "green";
+                        tiempoInicio = performance.now();
+                        ledEl.className = "led-lamp green-on";
+                        ledEl.textContent = "⚡";
+                        actionBtn.textContent = "¡PRESIONA AHORA!";
+                        msgEl.textContent = "🟢 ¡LED encendido!";
+                        msgEl.style.color = "#16a34a";
+                        window.ElectroBotApp.reproducirTono(800, 0.08);
+                    }
+                }, esperaAleatoria);
+            }
+
+            function manejarClicPrincipal() {
+                if (estado === "idle") {
+                    if (modoActual === "normal" && resultados.length >= 5) {
+                        resultados = [];
+                    }
+                    programarSiguientePulso();
+                    return;
+                }
+
+                if (estado === "waiting") {
+                    // Falso arranque controlado
+                    clearTimeout(timeoutId);
+                    estado = "idle";
+                    ledEl.className = "led-lamp";
+                    ledEl.textContent = "⚠️";
+                    actionBtn.textContent = "Intentar de nuevo";
+                    msgEl.textContent = "❌ ¡Te adelantaste! Espera a que se encienda el LED verde.";
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(180, 0.2, "square");
+                    return;
+                }
+
+                if (estado === "trap") {
+                    clearTimeout(timeoutId);
+                    estado = "idle";
+                    ledEl.className = "led-lamp";
+                    ledEl.textContent = "💥";
+                    actionBtn.textContent = "Reintentar";
+                    msgEl.textContent = "❌ ¡Caíste en el LED Rojo trampa! Penalización por falso pulso.";
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(150, 0.25, "square");
+                    return;
+                }
+
+                if (estado === "green") {
+                    const ms = Math.max(1, Math.round(performance.now() - tiempoInicio));
+                    estado = "idle";
+                    ledEl.className = "led-lamp";
+                    ledEl.textContent = "✅";
+                    lastMsEl.textContent = `${ms} ms`;
+                    resultados.push(ms);
+                    attemptEl.textContent = modoActual === "normal" ? `${resultados.length}/5` : String(resultados.length);
+                    window.ElectroBotApp.reproducirTono(680, 0.12);
+
+                    if (modoActual === "normal" && resultados.length === 5) {
+                        const promedio = Math.round(resultados.reduce((a, b) => a + b, 0) / 5);
+                        msgEl.textContent = `🏆 ¡Serie de 5 completada! Promedio: ${promedio} ms (último: ${ms} ms).`;
+                        msgEl.style.color = "#16a34a";
+                        actionBtn.textContent = "Nueva serie de 5";
+                        window.ElectroBotApp.registrarRecordMinijuego("reaccionLed", promedio, `${promedio} ms`, true);
+                    } else {
+                        msgEl.textContent = `⚡ Reacción registrada: ${ms} ms.`;
+                        msgEl.style.color = "#16a34a";
+                        actionBtn.textContent = modoActual === "normal" ? `Siguiente (${resultados.length + 1}/5)` : "Intentar de nuevo";
+                        window.ElectroBotApp.registrarRecordMinijuego("reaccionLed", ms, `${ms} ms`, true);
+                    }
+                    actualizarRecord();
+                }
+            }
+
+            function reiniciarModo(modo = modoActual) {
+                modoActual = modo;
+                clearTimeout(timeoutId);
+                estado = "idle";
+                resultados = [];
+                ledEl.className = "led-lamp";
+                ledEl.textContent = "💡";
+                attemptEl.textContent = modoActual === "normal" ? "0/5" : "0";
+                lastMsEl.textContent = "—";
+                actionBtn.textContent = "Iniciar prueba";
+                msgEl.textContent = "Presiona Iniciar prueba para comenzar.";
+                msgEl.style.color = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+                actualizarRecord();
+            }
+
+            actionBtn.addEventListener("click", manejarClicPrincipal);
+            document.getElementById("resetBtn").addEventListener("click", () => reiniciarModo(modoActual));
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => reiniciarModo(btn.dataset.mode));
+            });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                reiniciarModo(["facil", "normal", "dificil"].includes(pref) ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

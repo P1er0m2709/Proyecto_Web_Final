@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Guía de Electrónica</title>
+    <meta name="description" content="Guía práctica paso a paso de electrónica básica: Ley de Ohm, uso de protoboard, seguridad en el taller y videos incrustados.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Barra de navegación unificada -->
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html" class="active">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html">Minijuegos</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <span class="eyebrow">MANUAL DE TALLER PASO A PASO</span>
+            <h1>Guía práctica de electrónica</h1>
+            <p>
+                Domina los fundamentos esenciales antes de energizar tus prototipos:
+                magnitudes eléctricas, conexiones en protoboard, lectura de esquemas y seguridad.
+            </p>
+        </section>
+
+        <div class="guide-container">
+            <!-- Ruta de aprendizaje en 4 pasos -->
+            <section class="guide-steps" aria-label="Pasos fundamentales">
+                <article class="guide-step-card">
+                    <div class="step-number">1</div>
+                    <h3>Voltaje, Corriente y Resistencia</h3>
+                    <p>
+                        El <strong>voltaje (V)</strong> empuja las cargas, la <strong>corriente (I)</strong>
+                        es el flujo de electrones y la <strong>resistencia (R)</strong> controla cuánta
+                        corriente pasa. Fórmula clave: <code>V = I × R</code>.
+                    </p>
+                </article>
+
+                <article class="guide-step-card">
+                    <div class="step-number">2</div>
+                    <h3>Respeta la Polaridad</h3>
+                    <p>
+                        Diodos, LEDs, capacitores electrolíticos y baterías tienen polo positivo (+) y
+                        negativo (-). Conectarlos al revés impide que funcionen o puede dañarlos.
+                    </p>
+                </article>
+
+                <article class="guide-step-card">
+                    <div class="step-number">3</div>
+                    <h3>Domina la Protoboard</h3>
+                    <p>
+                        Los rieles laterales rojo (+) y azul (-) se conectan horizontalmente; las columnas
+                        centrales se conectan en grupos de 5 orificios separados por el canal central.
+                    </p>
+                </article>
+
+                <article class="guide-step-card">
+                    <div class="step-number">4</div>
+                    <h3>Seguridad Primero</h3>
+                    <p>
+                        Desconecta la fuente antes de modificar cables, verifica que no existan
+                        cortocircuitos y usa siempre una resistencia limitadora en serie con cada LED.
+                    </p>
+                </article>
+            </section>
+
+            <!-- Diagramas visuales en SVG -->
+            <section class="embed-grid">
+                <article class="embed-card">
+                    <h3>Mapa interno de conexiones de una Protoboard</h3>
+                    <p>Comprende cómo fluye la electricidad debajo de los orificios de la placa de pruebas.</p>
+                    <div class="svg-diagram-box">
+                        <svg viewBox="0 0 420 200" width="100%" role="img" aria-label="Diagrama interno de protoboard">
+                            <rect width="420" height="200" rx="14" fill="#0f172a" />
+                            <!-- Riel superior + / - -->
+                            <line x1="25" y1="26" x2="395" y2="26" stroke="#ef4444" stroke-width="4" />
+                            <line x1="25" y1="42" x2="395" y2="42" stroke="#3b82f6" stroke-width="4" />
+                            <text x="12" y="30" fill="#ef4444" font-size="12" font-weight="bold">+</text>
+                            <text x="13" y="46" fill="#60a5fa" font-size="14" font-weight="bold">-</text>
+
+                            <!-- Columnas centrales (grupos verticales de 5) -->
+                            <g stroke="#22c55e" stroke-width="6" stroke-linecap="round">
+                                <line x1="60" y1="62" x2="60" y2="92" />
+                                <line x1="110" y1="62" x2="110" y2="92" />
+                                <line x1="160" y1="62" x2="160" y2="92" />
+                                <line x1="210" y1="62" x2="210" y2="92" />
+                                <line x1="260" y1="62" x2="260" y2="92" />
+                                <line x1="310" y1="62" x2="310" y2="92" />
+                                <line x1="360" y1="62" x2="360" y2="92" />
+
+                                <line x1="60" y1="112" x2="60" y2="142" />
+                                <line x1="110" y1="112" x2="110" y2="142" />
+                                <line x1="160" y1="112" x2="160" y2="142" />
+                                <line x1="210" y1="112" x2="210" y2="142" />
+                                <line x1="260" y1="112" x2="260" y2="142" />
+                                <line x1="310" y1="112" x2="310" y2="142" />
+                                <line x1="360" y1="112" x2="360" y2="142" />
+                            </g>
+
+                            <!-- Canal central aislante -->
+                            <rect x="25" y="98" width="370" height="8" rx="4" fill="#334155" />
+                            <text x="210" y="105" text-anchor="middle" fill="#cbd5e1" font-size="9">Canal aislante (ideal para circuitos integrados NE555 / LM358)</text>
+
+                            <!-- Riel inferior -->
+                            <line x1="25" y1="162" x2="395" y2="162" stroke="#ef4444" stroke-width="4" />
+                            <line x1="25" y1="178" x2="395" y2="178" stroke="#3b82f6" stroke-width="4" />
+                        </svg>
+                    </div>
+                </article>
+
+                <article class="embed-card">
+                    <h3>Checklist previo antes de encender</h3>
+                    <ul style="margin:0;padding-left:20px;color:var(--muted);line-height:1.9;font-size:14px;">
+                        <li>¿La batería o fuente coincide con el voltaje soportado por los componentes?</li>
+                        <li>¿Colocaste una resistencia de 220 Ω a 470 Ω en serie con tu LED?</li>
+                        <li>¿El cátodo (-) del LED está orientado hacia el riel negativo (GND)?</li>
+                        <li>¿El multímetro está en el rango adecuado antes de medir?</li>
+                        <li>¿Las puntas no generan contacto accidental entre + y -?</li>
+                    </ul>
+                    <div style="margin-top:auto;display:flex;gap:10px;flex-wrap:wrap;">
+                        <a href="calculadoras.html" class="main-button">🧮 Ir a Calculadoras</a>
+                        <a href="minijuegos.html" class="secondary-button">🎮 Practicar</a>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Multimedia incrustado (Video + Mapa de referencia del taller) -->
+            <section class="embed-grid">
+                <article class="embed-card">
+                    <h3>🎥 Video incrustado: Cómo usar una Protoboard desde cero</h3>
+                    <p>Recurso audiovisual embebido para reforzar el montaje práctico en clase.</p>
+                    <div class="iframe-wrapper">
+                        <iframe
+                            src="https://www.youtube.com/embed/6WReFkfrUIk"
+                            title="Cómo usar una protoboard en electrónica básica"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </article>
+
+                <article class="embed-card">
+                    <h3>📍 Mapa incrustado: Zona de Talleres y Tiendas de Electrónica (Lima)</h3>
+                    <p>Contenido geográfico incrustado con OpenStreetMap como referencia para adquirir componentes.</p>
+                    <div class="iframe-wrapper">
+                        <iframe
+                            src="https://www.openstreetmap.org/export/embed.html?bbox=-77.0430%2C-12.0600%2C-77.0320%2C-12.0520&amp;layer=mapnik"
+                            title="Mapa interactivo de referencia de tiendas de electrónica"
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Guía Educativa de Electrónica (Cisco NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

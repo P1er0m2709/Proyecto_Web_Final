@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | 8 Minijuegos de Electrónica</title>
+    <meta name="description" content="Aprende electrónica jugando: 8 minijuegos con múltiples modos de dificultad, retos aleatorios y récords personales por cuenta.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Barra de navegación principal unificada -->
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="minigames-container">
+        <section class="page-header" style="margin-top:10px;">
+            <span class="eyebrow">8 RETOS CON 3 MODOS Y GENERACIÓN ALEATORIA</span>
+            <h1>🎮 Minijuegos de Electrónica</h1>
+            <p>
+                Cada minijuego cuenta con <strong>3 modalidades</strong>, generación aleatoria en cada partida
+                y guardado automático de tus récords personales al iniciar sesión.
+            </p>
+        </section>
+
+        <!-- Cuadrícula con los 8 minijuegos completos (incluyendo Arma el Circuito) -->
+        <section class="games-grid">
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">🌀</div>
+                    <span class="game-badge">3 Modos · Laberinto Aleatorio</span>
+                    <h2>Laberinto Eléctrico</h2>
+                    <p>Lleva la corriente desde la batería hasta el LED recorriendo laberintos generados al azar.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="laberinto">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="laberinto.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">🧠</div>
+                    <span class="game-badge">3 Modos · Secuencia Aleatoria</span>
+                    <h2>Memoria Electrónica</h2>
+                    <p>Memoriza y repite secuencias aleatorias de LEDs con sonido en modo Clásico, Turbo o 6 LEDs.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="memoria">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="memoria.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">🎨</div>
+                    <span class="game-badge">3 Modos · Resistencias al Azar</span>
+                    <h2>Código de Colores</h2>
+                    <p>Decodifica bandas aleatorias de resistencias en modo Práctica, Desafío o Contrarreloj.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="codigoColores">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="codigo-colores.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">⚠️</div>
+                    <span class="game-badge">3 Modos · 12 Fallas Reales</span>
+                    <h2>Detecta el Error</h2>
+                    <p>Diagnostica fallas aleatorias de polaridad, cortocircuitos y componentes mal conectados.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="detectaError">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="detecta-error.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">⚡</div>
+                    <span class="game-badge">3 Modos · Colisiones Reales</span>
+                    <h2>Atrapa Electrones</h2>
+                    <p>Recoge cargas eléctricas esquivando obstáculos reales fijos o móviles con vidas y tiempo.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="atrapaElectrones">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="atrapa-electrones.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">⏱️</div>
+                    <span class="game-badge">3 Modos · Modo Trampa LED</span>
+                    <h2>Reacción del LED</h2>
+                    <p>Mide tus reflejos en milisegundos con prueba rápida, serie de 5 rondas o LED rojo trampa.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="reaccionLed">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="reaccion-led.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">🔢</div>
+                    <span class="game-badge">3 Modos · Circuitos Mezclados</span>
+                    <h2>Ordena el Circuito</h2>
+                    <p>Ordena etapas aleatorias de circuitos básicos, intermedios y avanzados con arrastre o clic.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="ordenaCircuito">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="ordena-circuito.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+
+            <article class="game-card">
+                <div>
+                    <div class="game-icon">🧩</div>
+                    <span class="game-badge">3 Modos · 3 Circuitos</span>
+                    <h2>Arma el Circuito</h2>
+                    <p>Ensambla circuitos completos (LED, Sensor LDR y Relé) colocando cada pieza en su ranura.</p>
+                </div>
+                <div>
+                    <div class="game-record-chip" data-record-game="armaCircuito">🔐 Inicia sesión para ver tu récord</div>
+                    <a href="arma-circuito.html" class="play-button">🎮 Jugar</a>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Zona de Minijuegos Educativos (Cisco NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

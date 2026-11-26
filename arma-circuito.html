@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Arma el Circuito</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .circuit-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 22px 0;
+            padding: 24px 16px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .slot {
+            width: 138px;
+            min-height: 92px;
+            border: 3px dashed #94a3b8;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 700;
+            font-size: 13px;
+            padding: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+        .slot.correct {
+            border-style: solid;
+            border-color: #16a34a;
+            background: rgba(22, 163, 74, 0.14);
+        }
+        .slot.wrong {
+            border-color: #dc2626;
+            background: rgba(220, 38, 38, 0.14);
+        }
+        .components-tray {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 18px 0;
+        }
+        .comp-piece {
+            padding: 13px 18px;
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: grab;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s ease, border-color 0.2s ease;
+        }
+        .comp-piece:hover,
+        .comp-piece.selected {
+            border-color: var(--primary-bright);
+            transform: translateY(-2px);
+        }
+        .comp-piece.selected {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>🧩 Arma el Circuito</h1>
+        <p class="game-subtitle">
+            Arrastra cada componente hacia su ranura (o haz clic en una pieza y luego en la ranura destino).
+            Las piezas se mezclan aleatoriamente en cada partida.
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Circuito LED (4 piezas)</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Luz Automática LDR (5 piezas)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Control Motor con Relé (5 piezas)</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Errores: <strong id="mistakes">0</strong></div>
+            <div class="hud-pill">Armados: <strong id="completedCount">0</strong></div>
+            <div class="hud-pill">🏆 Récord: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <section id="circuitBoard" class="circuit-board" aria-label="Ranuras del circuito"></section>
+
+        <h3 style="margin:10px 0 6px;color:var(--primary-bright);">Componentes disponibles (orden aleatorio)</h3>
+        <section id="componentsTray" class="components-tray"></section>
+
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="restartBtn" class="main-button">🎲 Reiniciar y mezclar</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Arma el Circuito (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Arma el Circuito: corrige el fallo de la primera ranura, ofrece 3 planos
+         * electrónicos distintos, piezas mezcladas y soporte tanto drag-and-drop como clic.
+         */
+        (() => {
+            const CIRCUITOS = {
+                facil: [
+                    { pista: "1. Fuente de energía", nombre: "Batería", icono: "🔋 Batería 9V" },
+                    { pista: "2. Control encendido", nombre: "Interruptor", icono: "🔘 Interruptor" },
+                    { pista: "3. Limita corriente", nombre: "Resistencia", icono: "〰️ Resistencia 330Ω" },
+                    { pista: "4. Emisor de luz", nombre: "LED", icono: "💡 Diodo LED" }
+                ],
+                normal: [
+                    { pista: "1. Alimentación CC", nombre: "Batería", icono: "🔋 Batería 9V" },
+                    { pista: "2. Detecta luz", nombre: "LDR", icono: "☀ Sensor LDR" },
+                    { pista: "3. Divisor de voltaje", nombre: "Resistencia", icono: "〰️ Resistencia 10kΩ" },
+                    { pista: "4. Conmutador", nombre: "Transistor", icono: "T Transistor NPN" },
+                    { pista: "5. Luz nocturna", nombre: "LED", icono: "💡 LED Blanco" }
+                ],
+                dificil: [
+                    { pista: "1. Cerebro digital", nombre: "Arduino", icono: "▣ Arduino UNO" },
+                    { pista: "2. Protección pin", nombre: "Resistencia", icono: "〰️ Resistor 1kΩ" },
+                    { pista: "3. Amplifica señal", nombre: "Transistor", icono: "T Transistor Driver" },
+                    { pista: "4. Aísla potencia", nombre: "Relé", icono: "↯ Módulo Relé" },
+                    { pista: "5. Actuador", nombre: "Motor DC", icono: "⚙️ Motor DC 12V" }
+                ]
+            };
+
+            let modoActual = "normal";
+            let piezaActiva = null;
+            let errores = 0;
+            let armados = 0;
+
+            const boardEl = document.getElementById("circuitBoard");
+            const trayEl = document.getElementById("componentsTray");
+            const mistakesEl = document.getElementById("mistakes");
+            const completedEl = document.getElementById("completedCount");
+            const bestRecordEl = document.getElementById("bestRecord");
+            const msgEl = document.getElementById("message");
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("armaCircuito");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            function colocarEnRanura(slotEl, pieceEl) {
+                if (!pieceEl || slotEl.classList.contains("correct")) return;
+
+                const nombrePieza = pieceEl.dataset.name;
+                const esperado = slotEl.dataset.answer;
+
+                if (nombrePieza === esperado) {
+                    slotEl.classList.add("correct");
+                    slotEl.classList.remove("wrong");
+                    slotEl.innerHTML = `<span>✅ ${pieceEl.textContent}</span>`;
+                    pieceEl.remove();
+                    piezaActiva = null;
+
+                    msgEl.textContent = `✅ ¡Correcto! ${nombrePieza} instalado en el circuito.`;
+                    msgEl.style.color = "#16a34a";
+                    window.ElectroBotApp.reproducirTono(680, 0.11);
+
+                    // Verificar si todas las ranuras fueron completadas
+                    const todas = [...boardEl.querySelectorAll(".slot")];
+                    if (todas.every((s) => s.classList.contains("correct"))) {
+                        armados++;
+                        completedEl.textContent = String(armados);
+                        msgEl.textContent = `🎉 ¡Circuito armado sin fallos (${errores} errores)! Prueba otro modo.`;
+                        window.ElectroBotApp.reproducirTono(860, 0.2);
+                        window.ElectroBotApp.registrarRecordMinijuego("armaCircuito", armados, `${armados} circuitos`, false);
+                        actualizarRecord();
+                    }
+                } else {
+                    errores++;
+                    mistakesEl.textContent = String(errores);
+                    slotEl.classList.add("wrong");
+                    msgEl.textContent = `❌ ${nombrePieza} no corresponde a esa etapa del circuito.`;
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(200, 0.16, "square");
+                    setTimeout(() => slotEl.classList.remove("wrong"), 650);
+                }
+            }
+
+            function construirJuego(modo = modoActual) {
+                modoActual = modo;
+                errores = 0;
+                piezaActiva = null;
+                mistakesEl.textContent = "0";
+                msgEl.textContent = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+
+                const plano = CIRCUITOS[modoActual];
+                boardEl.innerHTML = "";
+                trayEl.innerHTML = "";
+
+                // Renderizar ranuras vacías con pistas claras
+                plano.forEach((etapa, idx) => {
+                    const slot = document.createElement("div");
+                    slot.className = "slot";
+                    slot.dataset.answer = etapa.nombre;
+                    slot.innerHTML = `<span style="color:var(--muted);font-size:12px;">${etapa.pista}</span><span>Soltar aquí</span>`;
+
+                    slot.addEventListener("dragover", (e) => e.preventDefault());
+                    slot.addEventListener("drop", () => colocarEnRanura(slot, piezaActiva));
+                    slot.addEventListener("click", () => {
+                        if (piezaActiva) colocarEnRanura(slot, piezaActiva);
+                    });
+
+                    boardEl.appendChild(slot);
+                    if (idx < plano.length - 1) {
+                        const arrow = document.createElement("span");
+                        arrow.textContent = "→";
+                        arrow.style.fontSize = "22px";
+                        arrow.style.color = "var(--primary-bright)";
+                        boardEl.appendChild(arrow);
+                    }
+                });
+
+                // Renderizar piezas en orden aleatorio
+                const mezcladas = [...plano].sort(() => Math.random() - 0.5);
+                mezcladas.forEach((etapa) => {
+                    const piece = document.createElement("button");
+                    piece.type = "button";
+                    piece.className = "comp-piece";
+                    piece.draggable = true;
+                    piece.dataset.name = etapa.nombre;
+                    piece.textContent = etapa.icono;
+
+                    piece.addEventListener("dragstart", () => { piezaActiva = piece; });
+                    piece.addEventListener("click", () => {
+                        trayEl.querySelectorAll(".comp-piece").forEach((p) => p.classList.remove("selected"));
+                        piece.classList.add("selected");
+                        piezaActiva = piece;
+                        msgEl.textContent = `Seleccionado: ${etapa.icono}. Ahora haz clic en su ranura destino.`;
+                        msgEl.style.color = "";
+                    });
+
+                    trayEl.appendChild(piece);
+                });
+
+                actualizarRecord();
+            }
+
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => construirJuego(btn.dataset.mode));
+            });
+            document.getElementById("restartBtn").addEventListener("click", () => construirJuego(modoActual));
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                construirJuego(CIRCUITOS[pref] ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Metadatos y título sincronizados con metadata.json -->
+    <title>ElectroBot | Plataforma Educativa de Electrónica</title>
+    <meta name="description" content="Plataforma educativa interactiva de electrónica para el curso Fundamentos de JavaScript (Cisco NetAcad). Incluye catálogo de 26 componentes, calculadoras, guía multimedia, 8 minijuegos con múltiples modos y sistema de cuentas.">
+    <meta property="og:title" content="ElectroBot | Plataforma Educativa de Electrónica">
+    <meta property="og:description" content="Aprende electrónica de forma segura e interactiva: componentes, calculadoras, guía multimedia, chatbot educativo y 8 minijuegos con récords por cuenta.">
+
+    <!-- Ícono local confiable (SVG) -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Barra de navegación principal unificada -->
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
+            <a href="index.html" class="active">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html">Minijuegos</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Sección Hero: Presentación atractiva y persuasiva -->
+        <section class="hero">
+            <div>
+                <span class="eyebrow">SOLUCIÓN DIGITAL PARA TALLER DE ELECTRÓNICA · NETACAD 5°A</span>
+                <h1>
+                    Aprende electrónica sin miedo a quemar componentes con
+                    <span>ElectroBot</span>
+                </h1>
+
+                <p>
+                    En el taller escolar es común confundir polaridades, elegir mal una resistencia
+                    o conectar circuitos a ciegas. <strong>ElectroBot</strong> reúne un catálogo de
+                    26 componentes, calculadoras de precisión, guía multimedia, chatbot educativo y
+                    8 minijuegos interactivos para dominar la electrónica antes de montar tu protoboard.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="componentes.html" class="main-button">🧩 Explorar 26 componentes</a>
+                    <a href="minijuegos.html" class="secondary-button">🎮 Jugar minijuegos</a>
+                    <a href="#satisfaccion" class="secondary-button">⭐ Opinar</a>
+                </div>
+            </div>
+
+            <div class="hero-illustration" aria-label="Ilustración interactiva de ElectroBot">
+                <!-- Diagrama SVG original del circuito básico educativo -->
+                <svg viewBox="0 0 320 175" width="100%" style="max-width:320px;" role="img" aria-label="Circuito LED educativo con batería y resistencia">
+                    <rect x="8" y="8" width="304" height="159" rx="18" fill="#0f172a" />
+                    <path d="M55 95 L55 45 L125 45" stroke="#38bdf8" stroke-width="4" fill="none" stroke-linecap="round" />
+                    <path d="M195 45 L265 45 L265 95" stroke="#38bdf8" stroke-width="4" fill="none" stroke-linecap="round" />
+                    <path d="M55 125 L55 145 L265 145 L265 125" stroke="#00b894" stroke-width="4" fill="none" stroke-linecap="round" />
+                    <!-- Batería -->
+                    <rect x="37" y="92" width="36" height="36" rx="8" fill="#facc15" />
+                    <text x="55" y="115" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">9V</text>
+                    <!-- Resistencia -->
+                    <rect x="125" y="33" width="70" height="24" rx="8" fill="#d6a96c" />
+                    <rect x="137" y="33" width="7" height="24" fill="#dc2626" />
+                    <rect x="152" y="33" width="7" height="24" fill="#dc2626" />
+                    <rect x="167" y="33" width="7" height="24" fill="#78350f" />
+                    <rect x="181" y="33" width="6" height="24" fill="#d4af37" />
+                    <text x="160" y="24" text-anchor="middle" font-size="11" fill="#e2e8f0">Resistencia 220 Ω</text>
+                    <!-- LED -->
+                    <circle cx="265" cy="110" r="18" fill="#22c55e" />
+                    <circle cx="265" cy="110" r="24" fill="#22c55e" opacity="0.25" />
+                    <text x="265" y="115" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">LED</text>
+                    <text x="160" y="136" text-anchor="middle" font-size="11" fill="#99f6e4">Flujo seguro: I = (9V - 2V) / 330Ω</text>
+                </svg>
+
+                <div class="hero-metrics">
+                    <div class="hero-metric">
+                        <strong>26</strong>
+                        <span>Componentes</span>
+                    </div>
+                    <div class="hero-metric">
+                        <strong>8</strong>
+                        <span>Minijuegos</span>
+                    </div>
+                    <div class="hero-metric">
+                        <strong>3</strong>
+                        <span>Perfiles Demo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Propuesta de valor vinculada a la necesidad del taller -->
+        <section class="solution-banner" aria-label="Problemática y solución digital">
+            <article class="solution-item">
+                <div style="font-size:28px;">⚠️</div>
+                <h3>Problemática en el Taller</h3>
+                <p>
+                    Muchos estudiantes dañan LEDs, confunden las bandas de color de las resistencias
+                    o arman circuitos invertidos por falta de práctica previa guiada.
+                </p>
+            </article>
+            <article class="solution-item">
+                <div style="font-size:28px;">💡</div>
+                <h3>Solución Digital ElectroBot</h3>
+                <p>
+                    Centraliza fichas técnicas claras, calculadoras con validación de errores,
+                    videos educativos y retos gamificados con múltiples dificultades.
+                </p>
+            </article>
+            <article class="solution-item">
+                <div style="font-size:28px;">🏆</div>
+                <h3>Aprendizaje Personalizado</h3>
+                <p>
+                    Inicia sesión con tu perfil para guardar tus preferencias, superar récords en los
+                    8 minijuegos y administrar un presupuesto simulado de kits de taller.
+                </p>
+            </article>
+        </section>
+
+        <!-- Categorías de aprendizaje -->
+        <section>
+            <div class="section-header">
+                <h2>Explora las áreas de la electrónica</h2>
+                <p>Aprende desde los conceptos básicos de electricidad hasta sensores y microcontroladores.</p>
+            </div>
+
+            <div class="categories">
+                <article class="category-card">
+                    <div class="icon">🔋</div>
+                    <h3>Fuentes de energía</h3>
+                    <p>Conoce baterías, reguladores de voltaje y buenas prácticas de alimentación.</p>
+                </article>
+
+                <article class="category-card">
+                    <div class="icon">🔧</div>
+                    <h3>Componentes clave</h3>
+                    <p>Domina resistencias, capacitores, diodos, transistores y relés.</p>
+                </article>
+
+                <article class="category-card">
+                    <div class="icon">🧠</div>
+                    <h3>Controladores</h3>
+                    <p>Descubre Arduino, ESP32, NE555, sensores ultrasónicos y PIR.</p>
+                </article>
+
+                <article class="category-card">
+                    <div class="icon">📐</div>
+                    <h3>Medición segura</h3>
+                    <p>Utiliza el multímetro, la protoboard y las calculadoras de taller.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Asistente educativo Chatbot -->
+        <section class="chat-section" id="chatbot">
+            <div class="section-header">
+                <h2>🤖 Habla con ElectroBot</h2>
+                <p>Resuelve dudas rápidas sobre componentes, fórmulas o precauciones del taller.</p>
+            </div>
+
+            <div class="chatbot">
+                <div class="chat-header">
+                    <div class="bot-avatar">🤖</div>
+                    <div>
+                        <h3>ElectroBot</h3>
+                        <p>Asistente educativo de electrónica disponible 24/7</p>
+                    </div>
+                </div>
+
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message bot">
+                        <div class="message-bubble">
+                            ¡Hola! Soy <strong>ElectroBot</strong> 🤖⚡<br>
+                            Pregúntame sobre resistencias, capacitores, diodos, LEDs,
+                            transistores, Arduino, ESP32, protoboard, Ley de Ohm o multímetro.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-questions">
+                    <button class="quick-question" type="button" data-question="¿Qué es una resistencia?">¿Qué es una resistencia?</button>
+                    <button class="quick-question" type="button" data-question="¿Qué es un LED?">¿Qué es un LED?</button>
+                    <button class="quick-question" type="button" data-question="Explícame la Ley de Ohm">Ley de Ohm</button>
+                    <button class="quick-question" type="button" data-question="¿Cómo usar la protoboard?">Protoboard</button>
+                    <button class="quick-question" type="button" data-question="¿Qué hace un multímetro?">Multímetro</button>
+                </div>
+
+                <form id="chatForm" class="chat-input-area" novalidate>
+                    <input
+                        id="chatInput"
+                        class="chat-input"
+                        type="text"
+                        placeholder="Escribe tu pregunta sobre electrónica..."
+                        autocomplete="off"
+                        required>
+                    <button class="send-button" type="submit" aria-label="Enviar pregunta">➤</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Elementos visuales y contenido incrustado (iframe multimedia) -->
+        <section class="multimedia-section">
+            <div class="section-header">
+                <h2>🎬 Recurso Multimedia del Taller</h2>
+                <p>Aprende visualmente cómo funciona un circuito básico y qué medidas de seguridad aplicar.</p>
+            </div>
+
+            <div class="embed-grid">
+                <article class="embed-card">
+                    <h3>Video tutorial incrustado: Ley de Ohm y Circuitos Básicos</h3>
+                    <p>Contenido educativo embebido directamente para repasar antes de tus prácticas.</p>
+                    <div class="iframe-wrapper">
+                        <iframe
+                            src="https://www.youtube.com/embed/m7yw2v8d2gA"
+                            title="Introducción a la Electrónica Básica y Ley de Ohm"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </article>
+
+                <article class="embed-card">
+                    <h3>Esquema rápido de polaridad LED</h3>
+                    <p>Identifica siempre el ánodo (+) y el cátodo (-) antes de energizar tu circuito.</p>
+                    <div class="svg-diagram-box">
+                        <svg viewBox="0 0 260 190" width="100%" role="img" aria-label="Diagrama de polaridad de un diodo LED">
+                            <rect width="260" height="190" rx="14" fill="#0f172a" />
+                            <!-- Cuerpo LED -->
+                            <path d="M95 105 L95 62 A35 35 0 0 1 165 62 L165 105 Z" fill="#22c55e" />
+                            <rect x="88" y="102" width="84" height="12" rx="4" fill="#16a34a" />
+                            <!-- Patitas -->
+                            <line x1="114" y1="114" x2="114" y2="168" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round" />
+                            <line x1="146" y1="114" x2="146" y2="152" stroke="#94a3b8" stroke-width="5" stroke-linecap="round" />
+                            <!-- Etiquetas -->
+                            <text x="64" y="148" fill="#5eead4" font-size="13" font-weight="bold">Ánodo (+)</text>
+                            <text x="58" y="164" fill="#cbd5e1" font-size="11">Pata larga</text>
+                            <text x="160" y="146" fill="#fda4af" font-size="13" font-weight="bold">Cátodo (-)</text>
+                            <text x="160" y="162" fill="#cbd5e1" font-size="11">Pata corta</text>
+                            <text x="130" y="24" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">Polaridad del LED</text>
+                        </svg>
+                    </div>
+                    <a href="guia.html" class="secondary-button" style="text-align:center;">Ver guía completa →</a>
+                </article>
+            </div>
+        </section>
+
+        <!-- Herramientas principales -->
+        <section>
+            <div class="section-header">
+                <h2>Herramientas educativas integradas</h2>
+                <p>Accede rápidamente a todos los módulos interactivos de ElectroBot.</p>
+            </div>
+
+            <div class="tools">
+                <article class="tool-card">
+                    <div class="icon">🧩</div>
+                    <h3>Catálogo (26 fichas)</h3>
+                    <p>Busca y filtra componentes pasivos, semiconductores, sensores e integrados.</p>
+                    <a href="componentes.html">Explorar catálogo →</a>
+                </article>
+
+                <article class="tool-card">
+                    <div class="icon">📘</div>
+                    <h3>Guía de Taller</h3>
+                    <p>Aprende seguridad, protoboard, diagramas y videos explicativos paso a paso.</p>
+                    <a href="guia.html">Abrir guía →</a>
+                </article>
+
+                <article class="tool-card">
+                    <div class="icon">🧮</div>
+                    <h3>Calculadoras</h3>
+                    <p>Calcula Ley de Ohm, resistencia para LED y código de colores con validación.</p>
+                    <a href="calculadoras.html">Usar calculadoras →</a>
+                </article>
+
+                <article class="tool-card">
+                    <div class="icon">🎮</div>
+                    <h3>8 Minijuegos</h3>
+                    <p>3 modos de juego por reto, generación aleatoria y récords por cuenta.</p>
+                    <a href="minijuegos.html">Ir a minijuegos →</a>
+                </article>
+            </div>
+        </section>
+
+        <!-- Formulario de Satisfacción del Cliente y Canales de Atención -->
+        <section class="satisfaction-section" id="satisfaccion">
+            <div class="section-header">
+                <span class="eyebrow">ATENCIÓN AL USUARIO Y MEJORA CONTINUA</span>
+                <h2>⭐ Formulario de Satisfacción del Cliente</h2>
+                <p>
+                    Tu opinión nos ayuda a mejorar ElectroBot para los estudiantes del taller.
+                    Evalúa tu experiencia y envíanos sugerencias o consultas técnicas.
+                </p>
+            </div>
+
+            <div class="satisfaction-grid">
+                <div class="card-panel">
+                    <form id="satisfactionForm" novalidate>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="satName">Nombre completo *</label>
+                                <input id="satName" type="text" placeholder="Ej. Lucía Paredes" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="satEmail">Correo de contacto *</label>
+                                <input id="satEmail" type="email" placeholder="nombre@colegio.edu.pe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="satRole">Perfil de usuario</label>
+                                <select id="satRole">
+                                    <option value="Estudiante 5°A">Estudiante</option>
+                                    <option value="Técnico de Taller">Técnico de Taller</option>
+                                    <option value="Docente">Docente</option>
+                                    <option value="Visitante">Visitante</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="satModule">Sección evaluada</label>
+                                <select id="satModule">
+                                    <option value="Plataforma General">Plataforma General</option>
+                                    <option value="Minijuegos">8 Minijuegos</option>
+                                    <option value="Catálogo de Componentes">Catálogo de Componentes</option>
+                                    <option value="Calculadoras">Calculadoras Electrónicas</option>
+                                    <option value="Sistema de Cuentas">Sistema de Cuentas</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>Calificación de satisfacción (1 a 5 estrellas) *</label>
+                                <div id="starRating" class="star-rating" role="radiogroup" aria-label="Calificación">
+                                    <button type="button" class="star-btn" data-value="1" aria-label="1 estrella">★</button>
+                                    <button type="button" class="star-btn" data-value="2" aria-label="2 estrellas">★</button>
+                                    <button type="button" class="star-btn" data-value="3" aria-label="3 estrellas">★</button>
+                                    <button type="button" class="star-btn" data-value="4" aria-label="4 estrellas">★</button>
+                                    <button type="button" class="star-btn" data-value="5" aria-label="5 estrellas">★</button>
+                                </div>
+                                <input id="satRating" type="hidden" value="5">
+                            </div>
+                            <div class="form-group full">
+                                <label for="satComment">Comentario, sugerencia o consulta *</label>
+                                <textarea id="satComment" rows="3" placeholder="Cuéntanos qué te pareció ElectroBot o qué herramienta te gustaría ver..." required></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="main-button" style="width:100%;">📩 Enviar evaluación</button>
+                        <div id="satFeedback" class="form-feedback" aria-live="polite"></div>
+                    </form>
+                </div>
+
+                <aside class="card-panel">
+                    <div class="reviews-summary">
+                        <div>
+                            <div style="font-size:12px;font-weight:800;color:var(--primary-dark);">PROMEDIO DE SATISFACCIÓN</div>
+                            <div id="totalSatisfactionCount" style="font-size:13px;color:var(--muted);">2 valoraciones</div>
+                        </div>
+                        <strong id="avgSatisfactionScore">5.0</strong>
+                    </div>
+
+                    <div id="reviewsList"></div>
+
+                    <div class="contact-box">
+                        <strong>📞 Canal directo de soporte del taller</strong><br>
+                        Correo: <code>soporte@electrobot.edu.pe</code><br>
+                        Horario de atención: Lunes a Viernes, 8:00 a. m. – 4:00 p. m.<br>
+                        Curso: Fundamentos de JavaScript · Cisco NetAcad 5°A
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Producto Final de Cómputo (Cisco Networking Academy · 5°A).</p>
+        <p>Desarrollado con HTML5, CSS3 y JavaScript modular.</p>
+    </footer>
+
+    <!-- Script global modular -->
+    <script src="app.js"></script>
+</body>
+</html>

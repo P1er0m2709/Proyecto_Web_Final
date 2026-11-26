@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Atrapa Electrones</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-area {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            height: 390px;
+            margin: 18px auto;
+            background: #0f172a;
+            border: 4px solid var(--primary-bright);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .player {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 14px #38bdf8;
+            z-index: 3;
+        }
+        .electron {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #facc15;
+            box-shadow: 0 0 16px #facc15;
+            z-index: 2;
+        }
+        .electron.bonus {
+            background: #c084fc;
+            box-shadow: 0 0 18px #c084fc;
+        }
+        .obstacle {
+            position: absolute;
+            background: #ef4444;
+            border: 2px solid #fca5a5;
+            border-radius: 8px;
+            z-index: 2;
+        }
+        .touch-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 54px);
+            justify-content: center;
+            gap: 8px;
+            margin: 14px auto;
+        }
+        .touch-btn {
+            width: 54px;
+            height: 44px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-bright);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>⚡ Atrapa Electrones</h1>
+        <p class="game-subtitle">
+            Mueve el electrón azul (flechas o WASD) para capturar cargas amarillas (+1) y cargas violeta (+3) sin tocar los aislantes rojos.
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Clásico (3 Vidas)</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Contrarreloj (45 s)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Obstáculos Móviles</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Cargas: <strong id="score">0</strong></div>
+            <div class="hud-pill">Vidas: <strong id="lives">❤️❤️❤️</strong></div>
+            <div class="hud-pill">Tiempo: <strong id="time">∞</strong></div>
+            <div class="hud-pill">🏆 Récord: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <div id="gameArea" class="game-area" aria-label="Campo eléctrico">
+            <div id="player" class="player">⚡</div>
+            <div id="electron" class="electron"></div>
+        </div>
+
+        <div class="touch-pad">
+            <span></span>
+            <button type="button" class="touch-btn" data-dx="0" data-dy="-20">▲</button>
+            <span></span>
+            <button type="button" class="touch-btn" data-dx="-20" data-dy="0">◀</button>
+            <button type="button" class="touch-btn" data-dx="0" data-dy="20">▼</button>
+            <button type="button" class="touch-btn" data-dx="20" data-dy="0">▶</button>
+        </div>
+
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="restartBtn" class="main-button">🎲 Reiniciar campo</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Atrapa Electrones (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Atrapa Electrones con detección real de colisiones AABB con obstáculos,
+         * generación aleatoria segura de cargas, obstáculos móviles en modo difícil y récords.
+         */
+        (() => {
+            const gameArea = document.getElementById("gameArea");
+            const playerEl = document.getElementById("player");
+            const electronEl = document.getElementById("electron");
+            const scoreEl = document.getElementById("score");
+            const livesEl = document.getElementById("lives");
+            const timeEl = document.getElementById("time");
+            const msgEl = document.getElementById("message");
+            const bestRecordEl = document.getElementById("bestRecord");
+
+            let modoActual = "normal";
+            let playerX = 20;
+            let playerY = 20;
+            let electronX = 260;
+            let electronY = 180;
+            let esBonus = false;
+            let puntos = 0;
+            let vidas = 3;
+            let tiempo = 45;
+            let activo = true;
+            let invulnerable = false;
+            let obstaculos = [];
+            let timerInterval = null;
+            let animFrame = null;
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("atrapaElectrones");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            /** Comprueba solapamiento entre dos rectángulos (colisión AABB) */
+            function colisiona(ax, ay, aw, ah, bx, by, bw, bh) {
+                return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+            }
+
+            function generarObstaculosAleatorios() {
+                // Limpiar obstáculos previos
+                gameArea.querySelectorAll(".obstacle").forEach((el) => el.remove());
+                obstaculos = [];
+
+                const cantidad = modoActual === "facil" ? 3 : modoActual === "normal" ? 4 : 5;
+                const anchoArea = gameArea.clientWidth || 600;
+                const altoArea = gameArea.clientHeight || 390;
+
+                for (let i = 0; i < cantidad; i++) {
+                    const w = 78 + Math.floor(Math.random() * 32);
+                    const h = 22;
+                    let x = 90 + Math.floor(Math.random() * Math.max(80, anchoArea - w - 100));
+                    let y = 70 + Math.floor((i * (altoArea - 110)) / cantidad);
+
+                    const el = document.createElement("div");
+                    el.className = "obstacle";
+                    el.style.width = `${w}px`;
+                    el.style.height = `${h}px`;
+                    el.style.left = `${x}px`;
+                    el.style.top = `${y}px`;
+                    gameArea.appendChild(el);
+
+                    obstaculos.push({
+                        el, x, y, w, h,
+                        vx: modoActual === "dificil" ? (i % 2 === 0 ? 1.8 : -1.8) : 0
+                    });
+                }
+            }
+
+            function generarElectronSeguro() {
+                const anchoArea = gameArea.clientWidth || 600;
+                const altoArea = gameArea.clientHeight || 390;
+                let intentos = 0;
+
+                do {
+                    electronX = 16 + Math.floor(Math.random() * (anchoArea - 48));
+                    electronY = 16 + Math.floor(Math.random() * (altoArea - 48));
+                    intentos++;
+                } while (
+                    intentos < 40 &&
+                    (obstaculos.some((o) => colisiona(electronX, electronY, 24, 24, o.x - 6, o.y - 6, o.w + 12, o.h + 12)) ||
+                     colisiona(electronX, electronY, 24, 24, playerX, playerY, 45, 45))
+                );
+
+                esBonus = Math.random() < 0.22;
+                electronEl.className = `electron ${esBonus ? "bonus" : ""}`;
+                electronEl.style.left = `${electronX}px`;
+                electronEl.style.top = `${electronY}px`;
+            }
+
+            function posicionarJugador() {
+                playerEl.style.left = `${playerX}px`;
+                playerEl.style.top = `${playerY}px`;
+            }
+
+            function finalizarJuego(razon) {
+                activo = false;
+                clearInterval(timerInterval);
+                cancelAnimationFrame(animFrame);
+                msgEl.textContent = `${razon} Total recolectado: ${puntos} cargas.`;
+                msgEl.style.color = "#0f766e";
+                window.ElectroBotApp.registrarRecordMinijuego("atrapaElectrones", puntos, `${puntos} cargas`, false);
+                actualizarRecord();
+            }
+
+            function revisarColisiones() {
+                if (!activo) return;
+
+                // Colisión con electrón
+                if (colisiona(playerX, playerY, 34, 34, electronX, electronY, 24, 24)) {
+                    const suma = esBonus ? 3 : 1;
+                    puntos += suma;
+                    scoreEl.textContent = String(puntos);
+                    msgEl.textContent = esBonus ? "✨ ¡Carga cuántica bonus (+3)!" : "✅ ¡Electrón capturado (+1)!";
+                    msgEl.style.color = "#16a34a";
+                    window.ElectroBotApp.reproducirTono(esBonus ? 880 : 660, 0.1);
+                    window.ElectroBotApp.registrarRecordMinijuego("atrapaElectrones", puntos, `${puntos} cargas`, false);
+                    actualizarRecord();
+                    generarElectronSeguro();
+                }
+
+                // Colisión real con obstáculos rojos
+                if (!invulnerable && obstaculos.some((o) => colisiona(playerX, playerY, 32, 32, o.x, o.y, o.w, o.h))) {
+                    vidas--;
+                    livesEl.textContent = vidas > 0 ? "❤️".repeat(vidas) : "💀";
+                    window.ElectroBotApp.reproducirTono(180, 0.2, "square");
+
+                    if (vidas <= 0) {
+                        finalizarJuego("💥 Cortocircuito: te quedaste sin vidas.");
+                        return;
+                    }
+
+                    invulnerable = true;
+                    playerX = 16;
+                    playerY = 16;
+                    posicionarJugador();
+                    msgEl.textContent = "⚠️ ¡Chocaste con un aislante rojo! Pierdes una vida.";
+                    msgEl.style.color = "#dc2626";
+                    setTimeout(() => { invulnerable = false; }, 900);
+                }
+            }
+
+            function mover(dx, dy) {
+                if (!activo) return;
+                const maxX = (gameArea.clientWidth || 600) - 34;
+                const maxY = (gameArea.clientHeight || 390) - 34;
+                playerX = Math.max(0, Math.min(playerX + dx, maxX));
+                playerY = Math.max(0, Math.min(playerY + dy, maxY));
+                posicionarJugador();
+                revisarColisiones();
+            }
+
+            function animarObstaculos() {
+                if (!activo || modoActual !== "dificil") return;
+                const maxW = gameArea.clientWidth || 600;
+                obstaculos.forEach((o) => {
+                    o.x += o.vx;
+                    if (o.x <= 10 || o.x + o.w >= maxW - 10) o.vx *= -1;
+                    o.el.style.left = `${o.x}px`;
+                });
+                revisarColisiones();
+                animFrame = requestAnimationFrame(animarObstaculos);
+            }
+
+            function iniciarPartida(modo = modoActual) {
+                modoActual = modo;
+                clearInterval(timerInterval);
+                cancelAnimationFrame(animFrame);
+
+                puntos = 0;
+                vidas = 3;
+                tiempo = 45;
+                activo = true;
+                invulnerable = false;
+                playerX = 16;
+                playerY = 16;
+
+                scoreEl.textContent = "0";
+                livesEl.textContent = "❤️❤️❤️";
+                msgEl.textContent = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+
+                posicionarJugador();
+                generarObstaculosAleatorios();
+                generarElectronSeguro();
+                actualizarRecord();
+
+                if (modoActual === "normal" || modoActual === "dificil") {
+                    timeEl.textContent = `${tiempo} s`;
+                    timerInterval = setInterval(() => {
+                        if (!activo) return;
+                        tiempo--;
+                        timeEl.textContent = `${tiempo} s`;
+                        if (tiempo <= 0) finalizarJuego("⏰ ¡Tiempo agotado!");
+                    }, 1000);
+                } else {
+                    timeEl.textContent = "∞";
+                }
+
+                if (modoActual === "dificil") {
+                    animFrame = requestAnimationFrame(animarObstaculos);
+                }
+            }
+
+            document.addEventListener("keydown", (event) => {
+                const paso = 20;
+                const mapa = {
+                    ArrowUp: [0, -paso], w: [0, -paso], W: [0, -paso],
+                    ArrowDown: [0, paso], s: [0, paso], S: [0, paso],
+                    ArrowLeft: [-paso, 0], a: [-paso, 0], A: [-paso, 0],
+                    ArrowRight: [paso, 0], d: [paso, 0], D: [paso, 0]
+                };
+                if (mapa[event.key]) {
+                    event.preventDefault();
+                    mover(mapa[event.key][0], mapa[event.key][1]);
+                }
+            });
+
+            document.querySelectorAll(".touch-btn").forEach((btn) => {
+                btn.addEventListener("click", () => mover(Number(btn.dataset.dx), Number(btn.dataset.dy)));
+            });
+
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => iniciarPartida(btn.dataset.mode));
+            });
+            document.getElementById("restartBtn").addEventListener("click", () => iniciarPartida(modoActual));
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                iniciarPartida(["facil", "normal", "dificil"].includes(pref) ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

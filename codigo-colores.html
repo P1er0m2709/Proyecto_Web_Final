@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroBot | Código de Colores</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .resistor-stage {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 26px auto;
+        }
+        .wire {
+            width: 64px;
+            height: 8px;
+            background: #64748b;
+        }
+        .resistor-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 270px;
+            height: 92px;
+            background: #d6a96c;
+            border-radius: 46px;
+            border: 3px solid #b4854a;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .band {
+            width: 26px;
+            height: 100%;
+        }
+        .band-labels {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-width: 520px;
+            margin: 18px auto;
+        }
+        .option-btn {
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface-alt);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.15s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-bright);
+            transform: translateY(-2px);
+        }
+        .option-btn.correct { background: #dcfce7; border-color: #16a34a; color: #166534; }
+        .option-btn.wrong { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+
+        @media (max-width: 540px) {
+            .resistor-body { width: 200px; height: 74px; }
+            .wire { width: 30px; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="index.html">⚡ ElectroBot</a>
+        <nav class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="componentes.html">Componentes</a>
+            <a href="guia.html">Guía</a>
+            <a href="calculadoras.html">Calculadoras</a>
+            <a href="minijuegos.html" class="active">Minijuegos</a>
+        </nav>
+        <div class="nav-actions">
+            <button id="authNavButton" class="auth-nav-btn" type="button">🔐 Iniciar sesión</button>
+            <button id="themeButton" class="theme-button" type="button" aria-label="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <h1>🎨 Código de Colores</h1>
+        <p class="game-subtitle">
+            Observa las 4 bandas generadas aleatoriamente y elige el valor correcto en ohmios (Ω).
+        </p>
+
+        <div class="mode-selector" id="modeSelector">
+            <button type="button" class="mode-btn" data-mode="facil">🟢 Práctica Libre</button>
+            <button type="button" class="mode-btn active" data-mode="normal">🟡 Desafío (10 Rondas)</button>
+            <button type="button" class="mode-btn" data-mode="dificil">🔴 Contrarreloj (60 s)</button>
+        </div>
+
+        <div class="hud-bar">
+            <div class="hud-pill">Puntos: <strong id="score">0</strong></div>
+            <div class="hud-pill">Racha: <strong id="streak">0</strong></div>
+            <div class="hud-pill"><span id="extraLabel">Ronda</span>: <strong id="extraValue">1/10</strong></div>
+            <div class="hud-pill">🏆 Récord: <strong id="bestRecord">—</strong></div>
+        </div>
+
+        <div class="resistor-stage" aria-label="Resistencia aleatoria">
+            <div class="wire"></div>
+            <div class="resistor-body" id="resistorBody"></div>
+            <div class="wire"></div>
+        </div>
+
+        <div id="bandLabels" class="band-labels"></div>
+        <div id="optionsGrid" class="options-grid"></div>
+
+        <div id="message" class="game-message" aria-live="polite"></div>
+
+        <div class="game-actions">
+            <button type="button" id="nextBtn" class="main-button">🎲 Nueva partida</button>
+            <a href="minijuegos.html" class="secondary-button">← Volver a minijuegos</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2026 ElectroBot — Código de Colores (NetAcad 5°A).</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        /**
+         * Juego de Código de Colores con generador aleatorio real de resistencias
+         * comerciales (4 bandas), opciones mezcladas y 3 modalidades.
+         */
+        (() => {
+            const COLORES = [
+                { nombre: "Negro", val: 0, mult: 1, hex: "#111827" },
+                { nombre: "Marrón", val: 1, mult: 10, hex: "#78350f" },
+                { nombre: "Rojo", val: 2, mult: 100, hex: "#dc2626" },
+                { nombre: "Naranja", val: 3, mult: 1000, hex: "#f97316" },
+                { nombre: "Amarillo", val: 4, mult: 10000, hex: "#eab308" },
+                { nombre: "Verde", val: 5, mult: 100000, hex: "#16a34a" },
+                { nombre: "Azul", val: 6, mult: 1000000, hex: "#2563eb" },
+                { nombre: "Violeta", val: 7, mult: 1, hex: "#7c3aed" },
+                { nombre: "Gris", val: 8, mult: 1, hex: "#6b7280" },
+                { nombre: "Blanco", val: 9, mult: 1, hex: "#f8fafc" }
+            ];
+
+            // Pares reales de dígitos comerciales E12
+            const PARES_E12 = [[1,0],[1,2],[1,5],[1,8],[2,2],[2,7],[3,3],[3,9],[4,7],[5,6],[6,8],[8,2]];
+
+            let modoActual = "normal";
+            let puntos = 0;
+            let racha = 0;
+            let ronda = 0;
+            let tiempoRestante = 60;
+            let temporizador = null;
+            let preguntaActual = null;
+            let bloqueado = false;
+
+            const bodyEl = document.getElementById("resistorBody");
+            const labelsEl = document.getElementById("bandLabels");
+            const optionsEl = document.getElementById("optionsGrid");
+            const scoreEl = document.getElementById("score");
+            const streakEl = document.getElementById("streak");
+            const extraLabelEl = document.getElementById("extraLabel");
+            const extraValueEl = document.getElementById("extraValue");
+            const msgEl = document.getElementById("message");
+            const bestRecordEl = document.getElementById("bestRecord");
+
+            function formatearValor(ohmios) {
+                if (ohmios >= 1000000) return `${(ohmios / 1000000).toFixed(ohmios % 1000000 === 0 ? 0 : 1)} MΩ`;
+                if (ohmios >= 1000) return `${(ohmios / 1000).toFixed(ohmios % 1000 === 0 ? 0 : 1)} kΩ`;
+                return `${ohmios} Ω`;
+            }
+
+            function actualizarRecord() {
+                const rec = window.ElectroBotApp.obtenerRecordMinijuego("codigoColores");
+                bestRecordEl.textContent = rec ? rec.texto : "Sin récord";
+            }
+
+            function generarResistencia() {
+                const [d1, d2] = PARES_E12[Math.floor(Math.random() * PARES_E12.length)];
+                const maxMult = modoActual === "facil" ? 3 : 5;
+                const mIdx = Math.floor(Math.random() * (maxMult + 1));
+                const c1 = COLORES[d1];
+                const c2 = COLORES[d2];
+                const c3 = COLORES[mIdx];
+
+                const valorReal = (d1 * 10 + d2) * c3.mult;
+                const correcto = formatearValor(valorReal);
+
+                // Generar 3 distractores realistas diferentes al correcto
+                const conjunto = new Set([correcto]);
+                while (conjunto.size < 4) {
+                    const [rd1, rd2] = PARES_E12[Math.floor(Math.random() * PARES_E12.length)];
+                    const rm = COLORES[Math.floor(Math.random() * (maxMult + 1))].mult;
+                    conjunto.add(formatearValor((rd1 * 10 + rd2) * rm));
+                }
+
+                const opciones = [...conjunto].sort(() => Math.random() - 0.5);
+                return { c1, c2, c3, correcto, opciones };
+            }
+
+            function mostrarNuevaRonda() {
+                if (modoActual === "normal" && ronda >= 10) {
+                    terminarJuego();
+                    return;
+                }
+                ronda++;
+                bloqueado = false;
+                preguntaActual = generarResistencia();
+
+                if (modoActual === "normal") extraValueEl.textContent = `${ronda}/10`;
+                if (modoActual === "facil") extraValueEl.textContent = `#${ronda}`;
+
+                bodyEl.innerHTML = `
+                    <div class="band" style="background:${preguntaActual.c1.hex}" title="${preguntaActual.c1.nombre}"></div>
+                    <div class="band" style="background:${preguntaActual.c2.hex}" title="${preguntaActual.c2.nombre}"></div>
+                    <div class="band" style="background:${preguntaActual.c3.hex}" title="${preguntaActual.c3.nombre}"></div>
+                    <div class="band" style="background:#d4af37" title="Dorado (±5%)"></div>
+                `;
+
+                labelsEl.textContent = modoActual === "dificil"
+                    ? "Modo Contrarreloj: ¡sin etiquetas de texto!"
+                    : `Bandas: ${preguntaActual.c1.nombre} · ${preguntaActual.c2.nombre} · ${preguntaActual.c3.nombre} · Dorado (±5%)`;
+
+                optionsEl.innerHTML = "";
+                preguntaActual.opciones.forEach((op) => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "option-btn";
+                    btn.textContent = op;
+                    btn.addEventListener("click", () => verificarRespuesta(op, btn));
+                    optionsEl.appendChild(btn);
+                });
+            }
+
+            function verificarRespuesta(seleccion, btnElegido) {
+                if (bloqueado) return;
+                bloqueado = true;
+
+                const botones = optionsEl.querySelectorAll(".option-btn");
+                botones.forEach((b) => {
+                    b.disabled = true;
+                    if (b.textContent === preguntaActual.correcto) b.classList.add("correct");
+                });
+
+                const { c1, c2, c3, correcto } = preguntaActual;
+                if (seleccion === correcto) {
+                    racha++;
+                    puntos += 10 + Math.min(racha * 2, 10);
+                    msgEl.textContent = `✅ ¡Correcto! ${c1.nombre}(${c1.val}) + ${c2.nombre}(${c2.val}) × ${c3.mult.toLocaleString("es-PE")} = ${correcto}.`;
+                    msgEl.style.color = "#16a34a";
+                    window.ElectroBotApp.reproducirTono(720, 0.12);
+                } else {
+                    racha = 0;
+                    btnElegido.classList.add("wrong");
+                    msgEl.textContent = `❌ Era ${correcto} (${c1.nombre}=${c1.val}, ${c2.nombre}=${c2.val}, ${c3.nombre}=×${c3.mult.toLocaleString("es-PE")}).`;
+                    msgEl.style.color = "#dc2626";
+                    window.ElectroBotApp.reproducirTono(200, 0.18, "square");
+                }
+
+                scoreEl.textContent = String(puntos);
+                streakEl.textContent = String(racha);
+
+                window.ElectroBotApp.registrarRecordMinijuego("codigoColores", puntos, `${puntos} pts`, false);
+                actualizarRecord();
+
+                setTimeout(() => {
+                    if (modoActual !== "dificil" || tiempoRestante > 0) {
+                        mostrarNuevaRonda();
+                    }
+                }, 950);
+            }
+
+            function terminarJuego() {
+                clearInterval(temporizador);
+                bloqueado = true;
+                optionsEl.querySelectorAll(".option-btn").forEach((b) => (b.disabled = true));
+                msgEl.textContent = `🏁 Partida finalizada con ${puntos} puntos. ¡Presiona Nueva partida para otro reto!`;
+                msgEl.style.color = "#0f766e";
+                window.ElectroBotApp.registrarRecordMinijuego("codigoColores", puntos, `${puntos} pts`, false);
+                actualizarRecord();
+            }
+
+            function iniciarPartida(modo = modoActual) {
+                modoActual = modo;
+                puntos = 0;
+                racha = 0;
+                ronda = 0;
+                tiempoRestante = 60;
+                clearInterval(temporizador);
+
+                scoreEl.textContent = "0";
+                streakEl.textContent = "0";
+                msgEl.textContent = "";
+
+                document.querySelectorAll("#modeSelector .mode-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.mode === modoActual);
+                });
+
+                if (modoActual === "dificil") {
+                    extraLabelEl.textContent = "Tiempo";
+                    extraValueEl.textContent = "60 s";
+                    temporizador = setInterval(() => {
+                        tiempoRestante--;
+                        extraValueEl.textContent = `${tiempoRestante} s`;
+                        if (tiempoRestante <= 0) terminarJuego();
+                    }, 1000);
+                } else {
+                    extraLabelEl.textContent = "Ronda";
+                }
+
+                actualizarRecord();
+                mostrarNuevaRonda();
+            }
+
+            document.querySelectorAll("#modeSelector .mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => iniciarPartida(btn.dataset.mode));
+            });
+            document.getElementById("nextBtn").addEventListener("click", () => iniciarPartida(modoActual));
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const pref = window.ElectroBotApp.obtenerDificultadPreferida();
+                iniciarPartida(["facil", "normal", "dificil"].includes(pref) ? pref : "normal");
+            });
+        })();
+    </script>
+</body>
+</html>

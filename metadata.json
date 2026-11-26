@@ -1,0 +1,5 @@
+{
+  "name": "ElectroBot",
+  "description": "Plataforma educativa interactiva de electrónica para el curso Fundamentos de JavaScript (Cisco NetAcad). Incluye catálogo de 26 componentes, calculadoras, guía multimedia, 8 minijuegos con múltiples modos y sistema de cuentas.",
+  "requestFramePermissions": []
+}
